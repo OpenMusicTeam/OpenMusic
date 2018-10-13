@@ -1,0 +1,25 @@
+Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0
+Content-Transfer-Encoding: 7bit
+Subject: Password reset on 127.0.0.1:8000
+From: webmaster@localhost
+To: panayot.marinov12@gmail.com
+Date: Mon, 08 Oct 2018 20:40:47 -0000
+Message-ID: <153903124729.16408.11659804387718050673@DESKTOP-IRE74UG.lan>
+
+
+You're receiving this email because you requested a password reset for your user account at 127.0.0.1:8000.
+
+Please go to the following page and choose a new password:
+
+http://127.0.0.1:8000/accounts/reset/Mg/509-336ba41ccfc042fef5c6/
+
+Your username, in case you've forgotten: psm2001
+
+Thanks for using our site!
+
+The 127.0.0.1:8000 team
+
+
+
+-------------------------------------------------------------------------------

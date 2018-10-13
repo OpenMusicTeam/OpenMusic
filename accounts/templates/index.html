@@ -1,0 +1,23 @@
+{% extends 'base.html' %}
+
+{% block title %}Home{% endblock %}
+
+{% block content %}
+{% if loggedIn %}
+    Hello {{ request.user.username }}<br>
+    <br>
+    <img src="{{ request.user.userprofile.avatar.url }}" style="max-height: 500px;max-width: 500px"/>
+    <br>
+    <p>Desciption:
+        {{ request.user.userprofile.desc }}
+    </p>
+    <p>
+        Age:{{ request.user.userprofile.age }}
+    </p>
+
+    <a href="{% url 'accounts:logout' %}">Logout</a>
+{% else %}
+    Not logged in. <br>
+    <a href="{% url 'accounts:signup' %}">Sign Up</a> or <a href="{% url 'accounts:login' %}">Login</a>
+{% endif %}
+{% endblock %}
