@@ -39,6 +39,7 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'accounts',
+    'file_upload',
 ]
 
 MIDDLEWARE = [
@@ -80,7 +81,7 @@ DATABASES = {
         'ENGINE': 'django.db.backends.postgresql',
         'NAME': 'OpenMusicDB',
         'USER': 'postgres',
-        'PASSWORD': 'toor_9427',
+        'PASSWORD': 'root_9427',
         'HOST': '127.0.0.1',
         'PORT': '5433',
     }
