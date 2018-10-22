@@ -2,8 +2,131 @@
 
 {% block title %}Home{% endblock %}
 
+{% load staticfiles %}
 {% block content %}
+<link rel="stylesheet"  type="text/css" href="{% static '/accounts/css/styles.css' %}">
+<script type="text/javascript" src="{% static '/accounts/js/index.js' %}"></script>
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/howler/2.0.15/howler.js"></script>
+
+<!--<script>
+        $(document).ready(function(){
+        var howler_example = new Howl({
+            src: ["{% static '/accounts/music/song.mp3' %}"],
+            volume: 1
+        });
+        howler_example.play();
+
+        $("#playBtn").on("click", function(){
+            howler_example.play();
+        });
+
+        $("#pauseBtn").on("click", function(){
+            howler_example.pause();
+        });
+
+        $("#stopBtn").on("click", function(){
+            howler_example.stop();
+        });
+
+        $("#volUpBtn").on("click", function(){
+            var vol = howler_example.volume();
+            vol += 0.1;
+            if (vol > 1) {
+                vol = 1;
+            }
+            howler_example.volume(vol);
+        });
+
+        $("#volDownBtn").on("click", function(){
+            var vol = howler_example.volume();
+            vol -= 0.1;
+            if (vol < 0) {
+                vol = 0;
+            }
+            howler_example.volume(vol);
+        });
+
+        });      
+    </script>-->
+
+    <script type="text/javascript">myFunction();</script>
+
+    <!--
+        button id='playBtn'>Play</button>
+    <button id='pauseBtn'>Pause</button>
+    <button id='stopBtn'>Stop</button>
+    <button id='volUpBtn'>Vol+</button>
+    <button id='volDownBtn'>Vol-</button>-->
+
+    
+<!-- Player Player Player Player Player Player Player Player Player Player Player Player Player -->
+    <div class="player">
+        <!-- Top Info -->
+        <div id="title">
+          <span id="track"></span>
+          <div id="timer">0:00</div>
+          <div id="duration">0:00</div>
+        </div>
+          
+        <!-- Controls -->
+        <div class="controlsOuter">
+          <div class="controlsInner">
+            <div id="loading"></div>
+            <div class="btn" id="playBtn"></div>
+            <div class="btn" id="pauseBtn"></div>
+            <div class="btn" id="prevBtn"></div>
+            <div class="btn" id="nextBtn"></div>
+          </div>
+          <div class="btn" id="playlistBtn"></div>
+          <div class="btn" id="volumeBtn"></div>
+        </div>
+      
+        <!-- Progress -->
+        <div id="waveform"></div>
+        <div id="bar"></div>
+        <div id="progress"></div>
+      
+        <!-- Playlist -->
+        <div id="playlist">
+          <div id="list"></div>
+        </div>
+      
+        <!-- Volume -->
+        <div id="volume" class="fadeout">
+          <div id="barFull" class="bar"></div>
+          <div id="barEmpty" class="bar"></div>
+          <div id="sliderBtn"></div>
+        </div>
+      
+       </div>
+
+<!-- End of Player End of Player End of Player End of Player End of Player End of Player End of Player End of Player -->
+
+    <br>
+    <script type="text/javascript" src="{% static '/accounts/js/siriwave.js' %}"></script>
+    <script type="text/javascript" src="{% static '/accounts/js/player.js' %}"></script>
+    <script type="text/javascript" src="{% static '/accounts/js/howler.core.js' %}"></script>
+
 {% if loggedIn %}
+    <!--<script type="text/javascript">
+        var sound = new Howl({
+        src: ["{% static '/accounts/music/song.mp3' %}"],
+        volume: 1,
+        onplayerror: function() {
+            sound.once('unlock', function() {
+                sound.play();
+            });
+        }
+        });
+
+        sound.play();
+    </script>-->
+
+
+
+    <!--<script>simpleFunction();</script>-->
+    <br>
     Hello {{ request.user.username }}<br>
     <br>
     <img src="{{ request.user.userprofile.avatar.url }}" style="max-height: 500px;max-width: 500px"/>
@@ -14,7 +137,6 @@
     <p>
         Age:{{ request.user.userprofile.age }}
     </p>
-
     <a href="{% url 'accounts:logout' %}">Logout</a>
 {% else %}
     Not logged in. <br>
