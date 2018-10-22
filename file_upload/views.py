@@ -3,6 +3,7 @@ from django.shortcuts import render
 from .forms import UploadFileForm
 from django.views.generic import TemplateView
 from .models import FileModel
+from django.core.exceptions import ValidationError
 
 # Imaginary function to handle an uploaded file.
 #from .file_upload_utilities import handle_uploaded_file
@@ -12,11 +13,19 @@ class UploadFile(TemplateView):
     def post(self, request, **kwargs):
         print('v posta sum')
         form = UploadFileForm(request.POST, request.FILES)
-        if form.is_valid():
+        try:
+            if form.is_valid():
+
             #instance = FileModel(data=request.FILES['file'])
             #instance.save()
-            form.save()
+            
+                form.save()
+                print('tashachki')
+        
             #return HttpResponseRedirect('/success/url/')
+            return render(request, 'file_upload/upload.html', {'form': form})
+        except Exception as e:
+            print('cicki')
             return render(request, 'file_upload/upload.html', {'form': form})
 
             
