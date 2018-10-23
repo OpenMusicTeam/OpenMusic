@@ -15,6 +15,9 @@ class UploadFile(TemplateView):
         form = UploadFileForm(request.POST, request.FILES)
         try:
             if form.is_valid():
+                instance = form.save(commit=False)
+                instance.user = request.user
+                instance.save()
 
             #instance = FileModel(data=request.FILES['file'])
             #instance.save()

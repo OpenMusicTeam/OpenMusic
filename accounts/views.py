@@ -2,12 +2,14 @@ from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.http import HttpResponse
 from django.shortcuts import redirect
+from django.shortcuts import render
 # Create your views here.
 from django.views.generic import TemplateView
 from django.views.generic.base import View
 
 from .forms import ProfileForm
 from .forms import UserForm
+import os
 
 
 # @receiver(post_save, sender=User)
@@ -43,16 +45,29 @@ class SignUpView(TemplateView):
     def post(self, request, *args, **kwargs):
         user_form = UserForm(request.POST, prefix='user')
         profile_form = ProfileForm(request.POST, request.FILES, prefix='profile')
+        print(profile_form.is_valid())
+        print(user_form.is_valid())
         if profile_form.is_valid() and user_form.is_valid():
             user = user_form.save(commit=False)
             profile = profile_form.save(commit=False)
             user.save()
             profile.user = user
             profile.save()
-            return HttpResponse("Signed Up!<br><a href='/'>Go to home</a>")
-        else:
-            return HttpResponse("Error : <a href='/signup'>Try again</a>!")
 
+            folderPath = './user_projects/' + user.username
+            self.createFolder(folderPath)
+
+            return HttpResponse("Signed Up!<br><a href='/'>Go to home</a>")
+        else:           
+            #return redirect('/accounts/signup/', {'errorMessage': 'This username or email is already in use!',})
+            return render(request, 'signup.html',{'user_form':user_form, 'profile_form': profile_form,})
+
+    def createFolder(self, directory):
+        try:
+            if not os.path.exists(directory):
+                os.makedirs(directory)
+        except OSError:
+            print ('Error: Creating directory. ' +  directory)
 
 class LoginView(TemplateView):
     template_name = 'registration/login.html'

@@ -57,6 +57,7 @@ Player.prototype = {
       sound = data.howl;
     } else {
       var url = '../static/accounts/audio/';
+      //var url = '../../audio/';
       sound = data.howl = new Howl({
         src: [/*url + data.file + '.webm', */url + data.file + '.mp3'],
         html5: true, // Force to HTML5 so that the audio can stream in (best for large files).
