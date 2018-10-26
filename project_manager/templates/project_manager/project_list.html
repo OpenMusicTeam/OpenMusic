@@ -1,0 +1,15 @@
+{% extends 'base.html' %}
+
+{% block title %}Home{% endblock %}
+
+{% block content %}
+<ul>
+    {% for project in project_set.all %}
+        <a href="{% url 'project_manager:projectDetails' username project.name %}">{{ project.name }}</a>
+    {% endfor %}
+    <br>
+    {{ project_set }}<br>
+    {{ username }}<br>
+    {{ user_id }}
+</ul>
+{% endblock %}

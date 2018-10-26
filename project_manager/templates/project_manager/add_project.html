@@ -1,0 +1,13 @@
+{% extends 'base.html' %}
+
+{% block title %}Home{% endblock %}
+
+{% block content %}
+    <h2>Add a new project</h2>
+    <form action="{% url 'project_manager:add_project' %}" method="post"
+    style="border: 0.4em dotted darkred;padding: 1em">
+        {% csrf_token %}
+        {{ project_form.as_p }}
+        <button type="submit">Add project</button>
+    </form>
+{% endblock %}

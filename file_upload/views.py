@@ -18,14 +18,14 @@ class UploadFile(TemplateView):
 
             #instance = FileModel(data=request.FILES['file'])
             #instance.save()
-            
                 form.save()
-                print('tashachki')
+                print('In the try')
         
             #return HttpResponseRedirect('/success/url/')
             return render(request, 'file_upload/upload.html', {'form': form})
         except Exception as e:
-            print('cicki')
+            print('In the catch')
+            print(e)
             return render(request, 'file_upload/upload.html', {'form': form})
 
             
