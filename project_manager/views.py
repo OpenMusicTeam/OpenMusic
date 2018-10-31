@@ -68,6 +68,7 @@ class ProjectsListView(LoginRequiredMixin, ListView):
             
             return render(request, 'project_manager/project_list.html', context)
 
+
 class AddProjectView(LoginRequiredMixin, TemplateView):
     template_name = 'project_manager/add_project.html'
 
@@ -117,5 +118,4 @@ class AddProjectView(LoginRequiredMixin, TemplateView):
         else:
             print("ProjectsListView in ELSE")
             project_form=ProjectForm()
-            url='/project_manager/add_project/'
-            return redirect(url)
+            return render(request, 'project_manager/project_list.html',{'project_form':project_form})
