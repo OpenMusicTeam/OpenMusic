@@ -14,6 +14,12 @@ class ProjectDetailView(LoginRequiredMixin, DetailView):
     template_name = 'project_manager/project_details.html'
 
     def get(self, request, **kwargs):
+        username = kwargs['user_name']
+        currently_logged_username=request.user.username
+        if username!=currently_logged_username:
+            url='/project_manager/projects/'+currently_logged_username+'/'
+            return redirect(url)
+
         project = Project.objects.filter(name__exact=self.kwargs['project_name'])[0]
         #project = Project.objects.all()[0]
 
@@ -35,9 +41,16 @@ class ProjectsListView(LoginRequiredMixin, ListView):
 
     def get(self, request, **kwargs):
         username = kwargs['user_name']
-        user_id = User.objects.get(username=username).pk
+        currently_logged_username=request.user.username
+        user_id = User.objects.get(username=currently_logged_username).pk
         all_projects_list = Project.objects.filter(userProfile__exact=user_id)
-        return render(request, 'project_manager/project_list.html', {
+
+        if username!=currently_logged_username:
+            url='/project_manager/projects/'+currently_logged_username+'/'
+            return redirect(url)
+        
+        else:
+            return render(request, 'project_manager/project_list.html', {
             'project_set': all_projects_list,
             'username': username,
             'user_id': user_id,
@@ -76,4 +89,5 @@ class AddProjectView(LoginRequiredMixin, TemplateView):
             return HttpResponse("Project added  !<br><a href='/'>Go to home</a>")  
         else:
             print("ProjectsListView in ELSE")
-            return render(request, 'project_manager/project_list.html',{'project_form':project_form,})
+            project_form=ProjectForm()
+            return render(request, 'project_manager/project_list.html',{'project_form':project_form})
