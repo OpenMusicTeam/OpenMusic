@@ -137,6 +137,8 @@
     <p>
         Age:{{ request.user.userprofile.age }}
     </p>
+    <a href="{% url 'project_manager:projects' request.user %}">My projects</a>
+    <br>
     <a href="{% url 'accounts:logout' %}">Logout</a>
 {% else %}
     Not logged in. <br>
