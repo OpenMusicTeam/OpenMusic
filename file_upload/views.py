@@ -5,11 +5,12 @@ from django.views.generic import TemplateView
 from .models import FileModel
 from django.core.exceptions import ValidationError
 from project_manager.models import Project
+from django.contrib.auth.mixins import LoginRequiredMixin
 
 # Imaginary function to handle an uploaded file.
 #from .file_upload_utilities import handle_uploaded_file
 
-class UploadFile(TemplateView):
+class UploadFile(LoginRequiredMixin, TemplateView):
     template_name = 'file_upload/upload.html'
     
     def post(self, request, **kwargs):
