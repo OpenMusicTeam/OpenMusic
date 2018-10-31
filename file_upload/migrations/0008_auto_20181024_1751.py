@@ -15,6 +15,6 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name='filemodel',
             name='data',
-            field=models.FileField(upload_to=file_upload.models.user_directory_path, validators=[file_upload.upload_validator.FileValidator(allowed_extensions=('mp3', 'jpg'), max_size=25165824)]),
+            field=models.FileField(validators=[file_upload.upload_validator.FileValidator(allowed_extensions=('mp3', 'jpg'), max_size=25165824)]),
         ),
     ]

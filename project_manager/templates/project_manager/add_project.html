@@ -10,4 +10,6 @@
         {{ project_form.as_p }}
         <button type="submit">Add project</button>
     </form>
+    <br>
+    <a href="{% url 'project_manager:projects' request.user %}">My projects</a>
 {% endblock %}
