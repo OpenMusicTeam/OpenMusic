@@ -79,7 +79,11 @@ class LoginView(TemplateView):
             user = authenticate(request, username=username, password=password)
             if user is not None:
                 login(request, user)
-                return redirect('/')
+                valuenext= request.POST['next']
+                if valuenext is not None and valuenext is not '':
+                    return redirect(valuenext)
+                else: 
+                    return redirect('/')
             else:
                 return HttpResponse('Error: User authentication error <a href="/login"">Try again</a>')
         else:

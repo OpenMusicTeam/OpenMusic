@@ -80,7 +80,7 @@ WSGI_APPLICATION = 'OpenMusic_Clear.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'OpenMusicDB',
+        'NAME': 'OpenMusic',
         'USER': 'postgres',
         'PASSWORD': 'root_9427',
         'HOST': '127.0.0.1',
@@ -127,9 +127,9 @@ USE_TZ = True
 
 STATIC_URL = '/static/'
 
-LOGIN_URL = '/login/'
-LOGIN_REDIRECT_URL = 'home'
-LOGOUT_REDIRECT_URL = 'home'
+LOGIN_URL = '/accounts/login/'
+LOGIN_REDIRECT_URL = 'accounts:home'
+LOGOUT_REDIRECT_URL = 'accounts:home'
 
 EMAIL_BACKEND = "django.core.mail.backends.filebased.EmailBackend"
 EMAIL_FILE_PATH = os.path.join(BASE_DIR, "sent_emails")

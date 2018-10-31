@@ -10,6 +10,9 @@
     <br>
     {{ project_set }}<br>
     {{ username }}<br>
-    {{ user_id }}
 </ul>
+<br>
+<a href="{% url 'project_manager:add_project' %}">Add a project</a>
+<br>
+<a href="{% url 'accounts:index' %}">Go to home</a>
 {% endblock %}

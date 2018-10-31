@@ -8,6 +8,7 @@
     style="border: 0.4em dotted green;padding: 1em">
         {% csrf_token %}
         {{ form.as_p }}
+        <input type="hidden" name="project_name" value="{{ project_name }}">
         <button type="submit">Submit</button>
     </form>
 {% endblock %}
