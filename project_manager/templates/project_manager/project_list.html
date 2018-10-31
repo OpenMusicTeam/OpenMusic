@@ -3,7 +3,18 @@
 {% block title %}Home{% endblock %}
 
 {% block content %}
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+
 <ul>
+    <script>
+        setTimeout(function() {
+        $("#message").fadeOut().empty();
+        }, 5000);
+    </script>
+    {% if message is not None and message is not '' %}
+        <div id="message">{{ message }}</div>
+    {% endif %}
+
     {% for project in project_set.all %}
         <a href="{% url 'project_manager:projectDetails' username project.name %}">{{ project.name }}</a>
     {% endfor %}
@@ -15,4 +26,5 @@
 <a href="{% url 'project_manager:add_project' %}">Add a project</a>
 <br>
 <a href="{% url 'accounts:index' %}">Go to home</a>
+
 {% endblock %}
