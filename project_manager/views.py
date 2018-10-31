@@ -50,43 +50,71 @@ class ProjectsListView(LoginRequiredMixin, ListView):
             return redirect(url)
         
         else:
-            return render(request, 'project_manager/project_list.html', {
-            'project_set': all_projects_list,
-            'username': username,
-            'user_id': user_id,
-        })
+            if 'message' in request.session:
+                message = request.session['message']
+                del request.session['message']
+                context = {
+                    'project_set': all_projects_list,
+                    'username': username,
+                    'user_id': user_id,
+                    'message': message,
+                }
+            else:
+                context = {
+                    'project_set': all_projects_list,
+                    'username': username,
+                    'user_id': user_id,
+                }
+            
+            return render(request, 'project_manager/project_list.html', context)
+
 
 class AddProjectView(LoginRequiredMixin, TemplateView):
     template_name = 'project_manager/add_project.html'
 
-    def get_context_data(self, **kwargs):
-        ctx = super(AddProjectView, self).get_context_data(**kwargs)
-        ctx['project_form'] = ProjectForm()
-        print("in get_context_data function")
-        return ctx
+    def get(self, request, **kwargs):
+        project_form = ProjectForm()
+        return render(request, 'project_manager/add_project.html', {'project_form': project_form})
 
     def post(self, request, *args, **kwargs):
         project_form = ProjectForm(request.POST)
         print("in post method")
         print(project_form.is_valid())
-        if(project_form.is_valid()):    	
-            current_user=request.user
-            username=current_user.username
-            project = project_form.save(commit=False)  
-            project_path='/OpenMusicOfficial/OpenMusic/user_projects/'+username+'/'+project.name
+        if(project_form.is_valid()):
+            project_name=project_form.cleaned_data['name']
+            user=request.user
+            user_projects = Project.objects.filter(userProfile=user)
+            if user_projects.filter(name=project_name).exists():
+                message="A project with that name already exists."
+                project_form = ProjectForm()
+                return render(request, 'project_manager/add_project.html', {
+                    'message': message,
+                    'project_form': project_form,
+                })
+            else:
+                current_user=request.user
+                username=current_user.username
+                project = project_form.save(commit=False)  
+                project_path='/OpenMusicOfficial/OpenMusic/user_projects/'+username+'/'+project.name
 
-            """pathlib.Path(project_path).mkdir(parents=True, exist_ok=True)"""
-            try:
-                print("in the try")
-                if not os.path.exists(project_path):
-                    os.mkdir(project_path)
-            except OSError:
-                sys.exit('Fatal: output directory "' + project_path + '" does not exist and cannot be created')
-            
-            project.userProfile=current_user
-            project.save()
-            print("ProjectsListView in IF")
-            return HttpResponse("Project added  !<br><a href='/'>Go to home</a>")  
+                """pathlib.Path(project_path).mkdir(parents=True, exist_ok=True)"""
+                try:
+                    print("in the try")
+                    if not os.path.exists(project_path):
+                        os.mkdir(project_path)
+                except OSError:
+                    sys.exit('Fatal: output directory "' + project_path + '" does not exist and cannot be created')
+                
+                project.userProfile=current_user
+                project.save()
+                print("ProjectsListView in IF")
+                
+                message="Project added successfully"
+                request.session['message']=message
+                url='/project_manager/projects/'+username+'/'
+                return redirect(url)
+
+                #return HttpResponse("Project added  !<br><a href='/'>Go to home</a>")  
         else:
             print("ProjectsListView in ELSE")
             project_form=ProjectForm()

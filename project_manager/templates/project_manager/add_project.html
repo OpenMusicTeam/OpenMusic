@@ -3,12 +3,25 @@
 {% block title %}Home{% endblock %}
 
 {% block content %}
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+
+    <script>
+        setTimeout(function() {
+        $("#message").fadeOut().empty();
+        }, 5000);
+    </script>
     <h2>Add a new project</h2>
     <form action="{% url 'project_manager:add_project' %}" method="post"
     style="border: 0.4em dotted darkred;padding: 1em">
         {% csrf_token %}
         {{ project_form.as_p }}
+
         <button type="submit">Add project</button>
+
+        {% if message is not None and message is not '' %}
+        <div id="message">{{ message }}</div>
+        {% endif %}
+        
     </form>
     <br>
     <a href="{% url 'project_manager:projects' request.user %}">My projects</a>
