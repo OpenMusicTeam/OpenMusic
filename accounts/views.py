@@ -85,9 +85,9 @@ class LoginView(TemplateView):
                 else: 
                     return redirect('/')
             else:
-                return HttpResponse('Error: User authentication error <a href="/login"">Try again</a>')
+                return HttpResponse('Error: User authentication error <a href="/accounts/login">Try again</a>')
         else:
-            return HttpResponse('Error: Username or password is empty <a href="/login">Try again</a>')
+            return HttpResponse('Error: Username or password is empty <a href="/accounts/login">Try again</a>')
 
 
 class LogoutView(View, LoginRequiredMixin):
