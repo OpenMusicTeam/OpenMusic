@@ -15,7 +15,7 @@
         <div id="message">{{ message }}</div>
     {% endif %}
 
-    {% for project in project_set.all %}
+    {% for project in project_set %}
         <a href="{% url 'project_manager:projectDetails' username project.name %}">{{ project.name }}</a>
     {% endfor %}
     <br>

@@ -10,5 +10,7 @@
         {{ form.as_p }}
         <input type="hidden" name="project_name" value="{{ project_name }}">
         <button type="submit">Submit</button>
+        <br>
+        <a href={{previous_path}}>Go back to project</a>
     </form>
 {% endblock %}

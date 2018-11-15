@@ -10,8 +10,19 @@
     <br>
     <form action="{% url 'project_manager:projectDetails' request.user project.name %}" method="POST">
         {% csrf_token %}
-        <button type="submit">Add a resource</button>
+        <button type="submit" name="addResource">Add a resource</button>
     </form> 
+    <form action="{% url 'project_manager:projectDetails' request.user project.name %}" method="POST">
+        {% csrf_token %}
+        {{ form.as_p }}
+        <button type="submit" name="addContributer">Add a contributer</button>
+    </form>
+
+    <br>
+    <p>File names:</p>
+    {% for resource in project_resources.all %}
+        <div>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{{ resource.title }}</div>
+    {% endfor %}
     <br>
     <a href="{% url 'project_manager:projects' request.user %}">My projects</a>
 {% endblock %}

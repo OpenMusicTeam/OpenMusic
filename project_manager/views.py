@@ -4,9 +4,11 @@ from django.views.generic import TemplateView, ListView, DetailView
 from django.shortcuts import redirect
 from .models import Project
 from django.contrib.auth.models import User
-from .forms import ProjectForm
+from .forms import ProjectForm, ProjectAddContributorForm
 from file_upload.forms import UploadFileForm
+from accounts.models import UserProfile
 from django.contrib.auth.mixins import LoginRequiredMixin
+from file_upload.models import FileModel
 import os
 #import pathlib
 
@@ -21,20 +23,43 @@ class ProjectDetailView(LoginRequiredMixin, DetailView):
             return redirect(url)
 
         project = Project.objects.filter(name__exact=self.kwargs['project_name'])[0]
+        project_id = project.id
+        project_resources = FileModel.objects.filter(project_id=project_id)
+        print("======================= Files ===========================================")
+        previous_url = request.path
+        print(project_resources)
         #project = Project.objects.all()[0]
 
         print(project != None)
         print(project)
+        form=ProjectAddContributorForm()
         return render(request, 'project_manager/project_details.html', {
             'project': project,
+            'project_resources': project_resources,
+            'form': form,
+            'previous_url': previous_url
         })
     def post(self, request, *args, **kwargs):
         project = Project.objects.filter(name__exact=self.kwargs['project_name'])[0]
-        form=UploadFileForm()
-        return render(request, 'file_upload/upload.html', {
-            'project_name': project.name,
-            'form': form,
+        addContributorForm=ProjectAddContributorForm(request.POST)
+        print('--------------------------------')
+        print(addContributorForm.is_valid())
+        if(addContributorForm.is_valid()):
+            added_contributor=addContributorForm.cleaned_data['contributor'][0]
+            new_form=ProjectAddContributorForm()
+            print('========================')
+            print(project.contributor)
+            project.contributor.add(added_contributor)
+            return render(request, 'project_manager/project_details.html', {
+            'project': project,
+            'form': new_form,
         })
+        else:
+            form=UploadFileForm()
+            return render(request, 'file_upload/upload.html', {
+                'project_name': project.name,
+                'form': form,
+            })
 
 class ProjectsListView(LoginRequiredMixin, ListView):
     template_name = 'project_manager/project_list.html'
@@ -43,13 +68,18 @@ class ProjectsListView(LoginRequiredMixin, ListView):
         username = kwargs['user_name']
         currently_logged_username=request.user.username
         user_id = User.objects.get(username=currently_logged_username).pk
-        all_projects_list = Project.objects.filter(userProfile__exact=user_id)
+        all_projects_list = list(Project.objects.filter(userProfile__exact=user_id))
+        all_contributed_projects=list(Project.objects.filter(contributors__user__id=request.user.id))
+        if  len(all_contributed_projects)>0:
+            all_projects_list.extend(all_contributed_projects)
 
         if username!=currently_logged_username:
             url='/project_manager/projects/'+currently_logged_username+'/'
             return redirect(url)
         
         else:
+            print(all_projects_list)
+
             if 'message' in request.session:
                 message = request.session['message']
                 del request.session['message']
