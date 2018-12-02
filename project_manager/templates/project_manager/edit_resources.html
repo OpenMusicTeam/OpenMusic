@@ -1,0 +1,250 @@
+{% extends 'base.html' %}
+
+{% block title %}Home{% endblock %}
+
+{% load static %}
+{% block content %}
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/wavesurfer.js/1.2.3/wavesurfer.min.js"></script>
+
+<!-- wavesurfer.js timeline -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/wavesurfer.js/1.2.3/plugin/wavesurfer.timeline.min.js"></script>
+
+<!-- Popper JS -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.3/umd/popper.min.js"></script>
+
+<link rel="stylesheet"  type="text/css" href="{% static '/project_manager/css/edit_resources.css' %}">
+
+<div class="container wrapper">
+    <br>
+    <h2>Edit resources</h2>
+    <hr>
+    <br>
+
+    <form id="resource_selector">
+        <h5>Resources:</h5>
+        {% for resource in project_resources.all %}
+        <input type="radio" name="rate" value="{{resource.title}}">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{{ resource.title }}<br>
+        {% endfor %}
+        <br>
+    </form>
+    <button class="btn" id ="btn" onclick="play_music(document.getElementById(resource_selector))">Select song</button>
+    <br><br>
+
+
+
+
+
+    <div id="waveform"></div>
+    <div id="waveform-timeline"></div>
+
+    <br>
+    <div class="container" style="text-align: center">
+        <div class="row">
+            <div class="col-md-1">
+            <button class="btn btn-success" style="display:none" id="button_play" onclick="wavesurfer.playPause()">
+                <i class="glyphicon glyphicon-play"></i>
+                Play/Pause
+            </button>
+            </div>
+        </div>
+            <div class="row">
+            <div class="col-md-12">
+            <div id="equalizer" style="margin-top: 10px"></div>
+            </div>
+            <div class="row">
+                <div class="col-md-6"></div>
+                <div class="col-md-4">
+                    <pre style="display:none" id="hertz"> 32Hz   64Hz  125Hz 250Hz  500Hz  1kHz  2kHz  4kHz  8kHz  16kHz</pre>
+                </div>
+                <div class="col-md-2"></div>
+            </div>
+        </div>
+        </div>
+        <br>
+        <div class="volbox">
+            <h5 style="display:none" id="volume_label">Volume:</h5>
+            <input class="slider" style="display:none" id="volume" type="range" min="0" max="1" value="1" step="0.01">
+        </div>
+    </div>
+</div>
+
+<script type="text/javascript">
+    var equalizer_count = -1;
+
+    var temp = ("{{audio_files}}");
+    temp=temp.replace(new RegExp("&#39;", 'g'), '"' );
+    var result = JSON.parse(temp);
+    var data=[];
+
+    for (var key in result) {
+        if (result.hasOwnProperty(key)) {
+            data[key]=result[key];
+        }
+    }
+
+    for(var resource in result){
+        title = resource.key;
+        data[title] = resource.value;
+    }
+
+    /*var wavesurfer = WaveSurfer.create({
+        container: '#waveform',
+        waveColor: 'violet',
+        progressColor: 'purple'
+    });*/
+
+    var wavesurfer = WaveSurfer.create({
+    container: '#waveform',
+    waveColor: 'darkorange',
+    progressColor: 'purple',
+    splitChannels: true,
+    height: 64
+    });
+
+
+    //var path = 'D:\\OpenMusicOfficial\\OpenMusic\\accounts\\static\\accounts\\audio';
+    //var old_path = 'https://ia902606.us.archive.org/35/items/shortpoetry_047_librivox/song_cjrg_teasdale_64kb.mp3';
+    //wavesurfer.load(old_path);
+
+    // Equalizer
+    wavesurfer.on('ready', function () {
+    var timeline = Object.create(WaveSurfer.Timeline);
+
+    timeline.init({
+    wavesurfer: wavesurfer,
+    container: '#waveform-timeline'
+    });
+
+    var EQ = [
+        {
+        f: 32,
+        type: 'lowshelf'
+        }, {
+        f: 64,
+        type: 'peaking'
+        }, {
+        f: 125,
+        type: 'peaking'
+        }, {
+        f: 250,
+        type: 'peaking'
+        }, {
+        f: 500,
+        type: 'peaking'
+        }, {
+        f: 1000,
+        type: 'peaking'
+        }, {
+        f: 2000,
+        type: 'peaking'
+        }, {
+        f: 4000,
+        type: 'peaking'
+        }, {
+        f: 8000,
+        type: 'peaking'
+        }, {
+        f: 16000,
+        type: 'highshelf'
+        }
+    ];
+
+    // Create filters
+    if (equalizer_count == 0){
+    var filters = EQ.map(function (band) {
+        var filter = wavesurfer.backend.ac.createBiquadFilter();
+        filter.type = band.type;
+        filter.gain.value = 0;
+        filter.Q.value = 1;
+        filter.frequency.value = band.f;
+        return filter;
+
+        wavesurfer.setVolume(0.4);
+        document.querySelector('#volume').value = wavesurfer.backend.getVolume();
+    });
+    // Connect filters to wavesurfer
+    wavesurfer.backend.setFilters(filters);
+}
+    // Bind filters to vertical range sliders
+
+        var container = document.querySelector('#equalizer');
+        filters.forEach(function (filter) {
+        var input = document.createElement('input');
+        wavesurfer.util.extend(input, {
+        type: 'range',
+        min: -40,
+        max: 40,
+        value: 0,
+        title: filter.frequency.value
+        });
+        input.style.display = 'inline-block';
+        input.classList.add('slider');
+        input.setAttribute('orient', 'vertical');
+        wavesurfer.drawer.style(input, {
+        'webkitAppearance': 'slider-vertical',
+        width: '50px',
+        height: '150px',
+
+        });
+        container.appendChild(input);
+
+        var onChange = function (e) {
+        filter.gain.value = ~~e.target.value;
+        };
+
+        input.addEventListener('input', onChange);
+        input.addEventListener('change', onChange);
+        });    
+
+        var volumeInput = document.querySelector('#volume');
+        var onChangeVolume = function (e) {
+        wavesurfer.setVolume(e.target.value);
+        console.log(e.target.value);
+        };
+        volumeInput.addEventListener('input', onChangeVolume);
+        volumeInput.addEventListener('change', onChangeVolume);
+
+    // For debugging
+    wavesurfer.filters = filters;
+    });
+
+    //Our code
+
+    resource_selector
+    var form = document.getElementById("resource_selector");
+
+    $("#btn").click(function(){ 
+        equalizer_count++;
+        var rate = document.querySelector('input[name="rate"]:checked').value;
+        var selected_file_data=data[rate];
+        wavesurfer.load("data:audio/wav;base64,"+selected_file_data);
+        });
+
+function play_music(music_to_play){
+            var button_play = document.getElementById("button_play");
+            if (button_play.style.display === "none") {
+                button_play.style.display = "block";
+            }
+            var hertz = document.getElementById("hertz");
+            if (hertz.style.display === "none") {
+                hertz.style.display = "inline-block";
+            }
+            var volume = document.getElementById("volume");
+            if (volume.style.display === "none") {
+                volume.style.display = "inline-block";
+            }
+            var volume_label = document.getElementById("volume_label");
+            if (volume_label.style.display === "none") {
+                volume_label.style.display = "inline-block";
+            }
+            var current_music=data[music_to_play];
+            wavesurfer.load("data:audio/wav;base64,"+current_music);
+        };
+</script>
+
+
+
+
+
+{% endblock %}

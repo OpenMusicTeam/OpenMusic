@@ -1,0 +1,27 @@
+{% extends 'base.html' %}
+
+{% block title %}Home{% endblock %}
+
+{% block content %}
+
+<div class="container wrapper">
+    <br>
+    <h2>Project Publishing</h2>
+    <form id="resource_selector" method='post' action="{% url 'project_manager:projectPublish' request.user project.name %}">
+        <h5>Choose a file to publish:</h5>
+        {% csrf_token %}
+        <div class="custom-controls-stacked">
+            {% for resource in project_resources.all %}
+            <input type="radio" name="rate" value="{{resource.title}}" style="margin-left:30px; font-size:30px;">&nbsp;&nbsp;&nbsp;{{ resource.title }}<br>
+            {% endfor %}
+        </div>
+        <br>
+        {{ form.as_p }}
+        <br>
+        <button class="btn btn-outline-info" id ="btn" type='submit'>Publish</button>
+    </form>
+</div>
+
+
+
+{% endblock %}

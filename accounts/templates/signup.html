@@ -1,0 +1,90 @@
+{% extends 'base.html' %}
+
+{% block title %}Sign Up{% endblock %}
+
+{% load widget_tweaks %}
+{% load staticfiles %}
+{% block content %}
+
+     <!-- Popper JS -->
+     <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.3/umd/popper.min.js"></script>
+
+     <link rel="stylesheet"  type="text/css" href="{% static '/accounts/css/login.css' %}">
+
+     <script type="text/JavaScript">
+        function form_submit(){
+            if (document.getElementById('copyrightCheckBoc').checked) {
+                document.getElementById("registrationForm").submit();
+            }
+            else{
+                var para = document.createElement("p");
+                var node = document.createTextNode("You have to accept the terms");
+                para.appendChild(node);
+                var element = document.getElementById("copyrightTerms");
+                element.appendChild(para);
+            }
+        }
+
+
+        $(document).ready(function(){
+        $('.pass_show').append('<span class="ptxt">Show</span>');  
+        });
+        $(document).on('click','.pass_show .ptxt', function(){ 
+        $(this).text($(this).text() == "Show" ? "Hide" : "Show"); 
+        $(this).prev().attr('type', function(index, attr){return attr == 'password' ? 'text' : 'password'; }); 
+        });  
+    </script>
+
+<div class="container wrapper">
+    <div class="row">
+        <div class="col-md-3"></div>
+        <div class="col-md-6">
+            <br>
+            <h2>Sign up</h2>
+            <form action="{% url 'accounts:signup' %}" id="registrationForm" enctype="multipart/form-data" method="POST">
+                {% csrf_token %}
+                <br>
+                <div class="form-group">
+                        {{ user_form.as_p }}
+                    <div class="form-group">
+                        <label for="age">Age:</label>
+                        {{ profile_form.age }}
+                        {{ profile_form.age.errors }}
+                    </div>
+
+                    <div class="form-group">
+                        <label for="description">Description:</label>
+                        {{ profile_form.desc }}
+                        {{ profile_form.desc.errors }}
+                    </div>
+                    
+                    <h6>Avatar:</h6>
+                    <div class="custom-file">
+                        <label class="custom-file-label" for="validatedCustomFile">Choose file...</label>
+                        {{ profile_form.avatar }}
+                        {{ profile_form.avatar.errors }}  
+                    </div>
+                </div>
+                <div id="copyrightTerms"style="overflow-y: scroll;">
+                    
+                <div class="custom-control custom-checkbox mb-3">
+                    <p style="overflow-y:scroll;">
+                        Welcome to our innovative music development and processing platform Open Music. There are some conditions you should be aware of before registering. We are not responsible for the copyright of any of the audio resources on our platform. When using Open Music, you agree your data to be used unprecedentedly. You will be acclaimed every time we add new terms of use on our platform. Thank you. Greetings from our team.
+                    </p>
+                    <input type="checkbox" id="copyrightCheckBoc">
+                    <label for="copyrightCheckBoc">I agree</label>
+                </div>
+                    <br>
+                </div>
+
+                
+               
+            </form>
+            <button onclick="form_submit()" class="btn btn-success">Sign Up</button>
+        </div>
+        <div class="col-md-3"></div>
+    </div>
+
+<br>
+</div>
+{% endblock %}

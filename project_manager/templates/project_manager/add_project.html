@@ -1,0 +1,36 @@
+{% extends 'base.html' %}
+
+{% block title %}Home{% endblock %}
+
+{% block content %}
+
+<!-- Popper JS -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.3/umd/popper.min.js"></script>
+ 
+
+    <script>
+        setTimeout(function() {
+        $("#message").fadeOut().empty();
+        }, 5000);
+    </script>
+    <div class="container wrapper">
+        <br>
+        <h2>Add a new project</h2>
+        <hr>
+        <div class="row">
+            <div class="col-md-5">
+                <form action="{% url 'project_manager:add_project' %}" method="POST">
+                    {% csrf_token %}
+                    {{ project_form.as_p }}
+
+                    <button class="btn btn-success" type="submit">Add project</button>
+
+                    {% if message is not None and message is not '' %}
+                    <div id="message">{{ message }}</div>
+                    {% endif %}   
+                </form>
+                <br>
+            </div>
+        </div>
+    </div>
+{% endblock %}

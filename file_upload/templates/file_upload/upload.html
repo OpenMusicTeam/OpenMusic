@@ -1,0 +1,44 @@
+{% extends 'base.html' %}
+
+{% block title %}Upload{% endblock %}
+{% load staticfiles %}
+{% block content %}
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.1.3/css/bootstrap.min.css">
+
+<!-- jQuery library -->
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+
+<!-- Popper JS -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.3/umd/popper.min.js"></script>
+
+<!-- Latest compiled JavaScript -->
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.1.3/js/bootstrap.min.js"></script> 
+
+<link rel="stylesheet"  type="text/css" href="{% static '/file_upload/css/upload.css' %}">
+    
+<div class="container wrapper"> 
+    <br>
+    <h2>Upload file</h2>
+    <hr>
+    <br>
+    <div class="row">
+      <div class="col-md-5">
+        <form method="POST" action="{% url 'file_upload:upload' %}" enctype="multipart/form-data">
+          {% csrf_token %}
+          <!--<label for="customFileTitle"><h5>Title:</h5></label>-->
+          {{ form.title }}
+          {{ form.title.errors }}
+          <div class="custom-file fileUploadForm">
+              {{ form.data }}
+              {{ form.data.errors }}
+            <label class="custom-file-label" for="customFile">Choose file</label>
+          </div>
+          <input type="hidden" name="project_name" value="{{ project_name }}">
+          <button class="btn btn-success" type="submit">Upload</button>
+        </form>
+        </div>
+    </div>
+</div>
+
+
+{% endblock %}

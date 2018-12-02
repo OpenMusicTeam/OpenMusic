@@ -1,0 +1,36 @@
+{% extends 'base.html' %}
+
+{% block title %}Home{% endblock %}
+
+{% load staticfiles %}
+{% block content %}
+<link rel="stylesheet"  type="text/css" href="{% static '/accounts/css/profile.css' %}">
+<script type="text/javascript" src="{% static '/accounts/js/index.js' %}"></script>
+     <!-- Popper JS -->
+     <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.3/umd/popper.min.js"></script>
+
+<div class="container wrapper">
+  {% if request.user.is_authenticated %}
+    <br>
+
+    <div class="card hovercard">
+      <div class="cardheader">
+        <br>
+        <h3 class="title">Profile info</h3>
+      </div>
+      <div class="avatar">
+        <img src="{% static '/accounts/images/'|add:userProfile.avatar.url %}" style="max-height: 500px;max-width: 500px"/>
+      </div>
+      <div class="info">
+          <div class="title">
+              <h4>{{ userProfile.user.username }}</h4>
+          </div>
+          <div class="desc">{{ userProfile.desc }}</div>
+          <div class="desc">{{ userProfile.age }} years old</div>
+          <br>
+      </div>
+    </div>
+  {% endif %}
+</div>
+
+{% endblock %}

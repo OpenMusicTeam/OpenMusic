@@ -1,0 +1,37 @@
+{% extends 'base.html' %}
+
+{% block title %}Home{% endblock %}
+
+{% load static %}
+{% block content %}
+
+<!-- Popper JS -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.3/umd/popper.min.js"></script>
+
+<link rel="stylesheet"  type="text/css" href="{% static '/project_manager/css/project_list.css' %}">
+    
+<div class="container wrapper"> 
+<br>
+    <script>
+        setTimeout(function() {
+        $("#message").fadeOut().empty();
+        }, 5000);
+    </script>
+    {% if message is not None and message is not '' %}
+        <div id="message">{{ message }}</div>
+    {% endif %}
+
+    <h2>My projects</h2>
+    <hr>
+    <br>
+    <div class="list-group">
+        {% for project in project_set %}
+            <a href="{% url 'project_manager:projectDetails' username project.name %}" class="list-group-item list-group-item-action">{{ project.name }}</a>
+        {% endfor %}
+    </div>
+    <br>
+
+    <a class="btn btn-outline-success" href="{% url 'project_manager:add_project' %}">Add a project</a>
+</div>
+
+{% endblock %}

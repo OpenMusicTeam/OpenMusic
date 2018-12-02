@@ -1,0 +1,67 @@
+{% extends 'base.html' %}
+
+{% block title %}Home{% endblock %}
+
+{% load static %}
+{% block content %}
+
+<!-- Popper JS -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.3/umd/popper.min.js"></script>
+
+<link rel="stylesheet"  type="text/css" href="{% static '/project_manager/css/project_details.css' %}">
+    
+<div class="container wrapper"> 
+    <br>
+    <h3>{{ project.name }}</h3>
+    <h6>{{ project.desc }} </h6>
+    <hr> 
+    <br>
+    <div class="row">
+     
+      <div class="col-md-6"> 
+          <div class="jumbotron">
+          <h5>Currently added resources:</h5>
+          <ul class="list-group list-group-flush">
+            {% for resource in project_resources %}
+              <li class="list-group-item lsItem"><h5>{{ resource.title }}</h5> <small>{{resource.data}}</small> </li>
+            {% endfor %}
+          </ul>
+          <br>
+
+          <form action="{% url 'project_manager:projectDetails' request.user project.name %}" method="POST">
+            {% csrf_token %}
+            <button class="btn btn-success" type="submit" name="addResource">Add a resource</button>
+          </form> 
+        </div>
+        </div>
+      
+
+    <div class="col-md-6">
+      <!--<form action="{% url 'project_manager:projectDetails' request.user project.name %}" method="POST">
+          {% csrf_token %}
+          {{ form.as_p }}
+          <button class="btn" type="submit" name="addContributer">Add to contributors</button>
+      </form>-->
+
+      <form action="{% url 'project_manager:projectDetails' request.user project.name %}" method="POST">
+        <div class="form-group">
+            <label for="formControlSelect">Users:</label>
+              {% csrf_token %}
+              {{ form.contributors }}
+              {{ form.contributors.errors }}
+        </div>
+        <button class="btn btn-success" type="submit" name="addContributer">Add to contributors</button>
+      </form>
+
+      <br>
+      <a class="btn btn-outline-info" href="{% url 'project_manager:editResources' request.user project.name %}">Edit resources</a>
+    </div>
+  
+    <form action="{% url 'project_manager:projectPublish' request.user project.name %}">
+        <button class="btn btn-outline-info publish-btn" type="submit">Publish</button>
+    </form>
+
+  </div>
+
+</div>
+{% endblock %}

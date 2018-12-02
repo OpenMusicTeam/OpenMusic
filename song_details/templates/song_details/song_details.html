@@ -1,0 +1,260 @@
+{% extends 'base.html' %}
+
+{% block title %}Sign Up{% endblock %}
+
+{% load widget_tweaks %}
+{% load staticfiles %}
+{% block content %}
+
+<!-- Popper JS -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.3/umd/popper.min.js"></script>
+     
+<!-- wavesurfer JS -->
+
+<!-- main wavesurfer.js lib -->
+<script src="//cdnjs.cloudflare.com/ajax/libs/wavesurfer.js/1.4.0/wavesurfer.min.js"></script>
+
+<!-- wavesurfer.js timeline -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/wavesurfer.js/1.2.3/plugin/wavesurfer.timeline.min.js"></script>
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+
+<link rel="stylesheet"  type="text/css" href="{% static '/song_details/css/song_details.css' %}">
+    
+
+<script>
+function like_song (song_name) {
+    $.ajax({
+        type: "POST",
+        url: "{% url 'song_details:like' %}",
+        data: {'song_name': song_name,'csrfmiddlewaretoken': '{{ csrf_token }}'},
+        dataType: "json",
+        success: function(response) {
+            var element = document.getElementById(song_name + " like button");
+            var outDivButton = document.getElementById("outDivButton");
+            if(response.is_already_liked)
+            { 
+                element.classList.remove("btn-outline-success");
+                element.classList.add("btn-success");
+                element.value="Unlike";
+                document.getElementById(song_name+"likes").innerHTML=(parseInt(document.getElementById(song_name+"likes").textContent)+1).toString();
+            }
+            else
+            {
+                element.classList.remove("btn-success");
+                element.classList.add("btn-outline-success");
+                element.value="Like";
+                document.getElementById(song_name+"likes").innerHTML=(parseInt(document.getElementById(song_name+"likes").textContent)-1).toString(); 
+            }
+            //alert(response.message);
+            //alert('Company likes count is now ' + response.likes_count);
+                          
+            },
+        error: function(rs, e) {
+        //alert(rs.responseText);
+        }
+    }); 
+}
+
+function comment_song (song_name, comment_text){
+    $.ajax({
+        type: "POST",
+        url: "{% url 'song_details:comment' %}",
+        data: {
+            'song_name': song_name, 
+            'comment_text': comment_text,
+            'csrfmiddlewaretoken': '{{ csrf_token }}'
+            },
+        dataType: "json",
+        success: function(response) {
+            //alert(response.is_already_liked)
+            var element = document.getElementById("commentsList");
+            var currentdate = new Date(); 
+            element.innerHTML = element.innerHTML+'<li class="clearfix"><img src='+request.user.userProfile.avatar+' class="avatar" alt=""><div class="post-comments"><p class="meta">'+currentdate.getDate()+' <a href="#">'+request.user+'</a> says : </p><p>'+comment_text+'</p></div></li>';
+
+
+            //alert(response.message);
+            //alert('Company likes count is now ' + response.likes_count);
+                          
+            },
+        error: function(rs, e) {
+        //alert(rs.responseText);
+        }
+    }); 
+}     
+</script>
+
+<script type="text/javascript">
+    var state = 'stop';
+
+    function buttonPlayPress() {
+        if(state=='stop'){
+        state='play';
+        var button = d3.select("#button_play").classed('btn-success', true); 
+        button.select("i").attr('class', "fa fa-pause");  
+        }
+        else if(state=='play' || state=='resume'){
+        state = 'pause';
+        d3.select("#button_play i").attr('class', "fa fa-play"); 
+        }
+        else if(state=='pause'){
+        state = 'resume';
+        d3.select("#button_play i").attr('class', "fa fa-pause");        
+        }
+        console.log("button play pressed, play was "+state);
+    }
+</script>
+
+<div class="container wrapper"> 
+    <br>
+    <small><a href="{% url 'accounts:profile' song.userProfile.username %}">{{song.userProfile.username}}</a></small>
+    <h2>{{ song.title }}</h2>
+    {% if song.description is not None %}
+        <h5>{{ song.description }}</h5>
+    {% endif %}
+    <hr> 
+    <br>
+
+    <div class="row">
+        <div class="col-md-12">
+            <div class="wav-form-custom">
+                <div id="waveform"></div>
+                <div id="waveform-timeline"></div>
+            </div>
+        </div>
+      <br>
+    </div>
+    <br>
+    <div class="row">
+        <div class="col-md-1">
+            <button style="display:none" type="button" id="button_play" class="btn btn-outline-success playBtn" onclick='wavesurfer.playPause();buttonPlayPress();'>
+                <i class="fa fa-play"></i>
+            </button>
+        </div>
+        <div class="col-md-1">
+            <span style="display:none" class="fa fa-volume-up" id="volume-up-icon" style="font-size:40px; display:inline-block; "></span>
+        </div>
+        <div class="col-md-10">
+            <input style="display:none" class="slider" id="volume" type="range" min="0" max="1" value="1" step="0.01" style="margin-top:10px">
+        </div>      
+        <br>
+    </div>
+    <br>
+
+    <div class="row">
+        <div class="col-md-2">
+            {% if song_likes.is_already_liked %}
+                <input type="button" class="btn btn-success btn-block" onClick=like_song("{{song.title}}") name="like" id="{{song.title}} like button" value="Unlike"><br>
+            {% elif song_likes.is_already_liked is False %}
+                <input type="button" class="btn btn-outline-success btn-block" onClick=like_song("{{song.title}}") name="like" id="{{song.title}} like button" value="Like"><br>
+            {% endif %}
+        </div>
+        <div class="col-md-4">
+            <span style="margin-top:13px;" id="{{song.title}}likes">{{song_likes.likes}}</span>
+            <span>&nbsp;likes</span>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-md-7">
+            <textarea class="form-control" name="comment" form="publish_projects" id="{{song.title}}" placeholder="Write a comment..."></textarea>
+            <br>
+            <input type="button" class="btn btn-outline-success" onClick=comment_song("{{song.title}}",document.getElementById("{{song.title}}").value) name="comment" id="{{song.title}} comment button" value="Comment"><br>
+        </div>
+    </div>    
+
+    <br>
+        <div class="row">
+            <div class="col-md-12">
+                <div class="blog-comment">
+                    <h3 class="text-success">Comments</h3>
+                    <hr/>
+                    <ul class="comments" id="commentsList">
+                    {% for comment in song_comments %}
+                        <li class="clearfix">
+                      
+                          <img src="{% static '/accounts/images/'|add:comment.author.avatar.url %}" class="avatar" alt="Image">
+                          <div class="post-comments">
+                              <p class="meta">{{comment.created_date}} <a href="{% url 'accounts:profile' comment.author.user.username %}">{{comment.author}}</a> says : </p>
+                              <p>
+                                  {{comment.text}}
+                              </p>
+                          </div>
+                        </li>
+                    {% endfor %}
+                    </ul>
+                </div>
+            </div>
+        </div>
+</div>
+
+
+<script type="text/javascript">
+
+
+ var equalizer_count = -1;
+
+      var wavesurfer = WaveSurfer.create({
+        container: '#waveform',
+        waveColor: '#D2EDD4',
+        progressColor: '#46B54D',
+        barWidth: 5,
+        barRadius: true,
+        height: 200
+    });
+
+    wavesurfer.on('ready', function () {
+    var timeline = Object.create(WaveSurfer.Timeline);
+
+    timeline.init({
+        wavesurfer: wavesurfer,
+        container: '#waveform-timeline'
+    });
+    });
+    
+    wavesurfer.setVolume(0.4);
+    document.querySelector('#volume').value = wavesurfer.backend.getVolume();
+
+    var volumeInput = document.querySelector('#volume');
+        var onChangeVolume = function (e) {
+        wavesurfer.setVolume(e.target.value);
+        console.log(e.target.value);
+        };
+        volumeInput.addEventListener('input', onChangeVolume);
+        volumeInput.addEventListener('change', onChangeVolume);
+    var temp = ("{{audio_files}}");
+        temp=temp.replace(new RegExp("&#39;", 'g'), '"' );
+        var result = JSON.parse(temp);
+        var data=[];
+    
+        for (var key in result) {
+            if (result.hasOwnProperty(key)) {
+                data[key]=result[key];
+            }
+        } 
+        
+        for(var resource in result){
+            title = resource.key;
+            data[title] = resource.value;
+        }
+
+        //function play_music(music_to_play){
+        $(document).ready(function() {
+            var button_play = document.getElementById("button_play");
+            if (button_play.style.display === "none") {
+                button_play.style.display = "block";
+            }
+            var volume_up_icon = document.getElementById("volume-up-icon");
+            if (volume_up_icon.style.display === "none") {
+                volume_up_icon.style.display = "inline-block";
+                volume_up_icon.style.fontSize = "40px";
+            }
+            var volume = document.getElementById("volume");
+            if (volume.style.display === "none") {
+                volume.style.display = "inline-block";
+            }
+            var current_music=data["{{song.title}}"];
+            wavesurfer.load("data:audio/wav;base64,"+current_music);
+        });
+    </script>
+
+{% endblock %}

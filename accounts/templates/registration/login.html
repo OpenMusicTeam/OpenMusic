@@ -1,0 +1,61 @@
+{% extends 'base.html' %}
+
+{% block title %}Login{% endblock %}
+
+{% load staticfiles %}
+{% block content %}
+ 
+     <!-- Popper JS -->
+     <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.3/umd/popper.min.js"></script>
+ 
+     <link rel="stylesheet"  type="text/css" href="{% static '/accounts/css/login.css' %}">
+
+     <script type="text/JavaScript">
+        $(document).ready(function(){
+        $('.pass_show').append('<span class="ptxt">Show</span>');  
+        });
+        $(document).on('click','.pass_show .ptxt', function(){ 
+        $(this).text($(this).text() == "Show" ? "Hide" : "Show"); 
+        $(this).prev().attr('type', function(index, attr){return attr == 'password' ? 'text' : 'password'; }); 
+        });  
+    </script>
+
+    <script>
+        setTimeout(function() {
+        $("#message").fadeOut().empty();
+        }, 5000);
+    </script>
+
+<div class="container wrapper">
+    <div class="row">
+        <div class="col-md-5">
+            <br>
+            <h2>Login</h2>
+            <form method="POST">
+                {% csrf_token %}
+                <br>
+                
+                
+                <div class="form-group">
+                    <!--<label for="usernameInput">Username:</label>-->
+                    <input type="text" class="form-control" id="usernameInput" name="username" placeholder="Enter username">
+                </div>
+                <div class="form-group pass_show">
+                    <!--<label for="password">Password:</label>-->
+                    <input type="password" class="form-control" id="password" name="password" placeholder="Enter password">
+                </div>
+                <input type="hidden" name="next" value="{{ request.GET.next }}"/>
+
+                <button type="submit" class="btn btn-success">Submit</button>
+                
+            </form>
+        </div>
+        <div class="col-md-7">
+                {% if message is not None and message is not '' %}
+                <br><br><br><br>
+                    <div style="font-size:15;color:red;"id="message">{{ message }}</div>
+                {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}
