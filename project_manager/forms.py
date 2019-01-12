@@ -36,7 +36,7 @@ class ProjectPublishForm(ModelForm):
 
     class Meta:
         model = FileModel
-        fields = ['description',]
+        fields = ['description', 'genre', 'project_publish_image_url',]
         
         
         

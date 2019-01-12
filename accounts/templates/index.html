@@ -27,28 +27,27 @@
     <script data-require="tether@1.4.0" data-semver="1.4.0" src="https://cdnjs.cloudflare.com/ajax/libs/tether/1.4.0/js/tether.min.js"></script>
 
     <script>
-            function like_song (song_name){
+            function like_song (song_name, author_username){
                   $.ajax({
                            type: "POST",
                            url: "{% url 'accounts:like' %}",
-                           data: {'song_name': song_name,'csrfmiddlewaretoken': '{{ csrf_token }}'},
+                           data: {'song_name': song_name, 'song_author': author_username, 'csrfmiddlewaretoken': '{{ csrf_token }}'},
                            dataType: "json",
                            success: function(response) {
-                               //alert(response.is_already_liked)
-                               var element = document.getElementById(song_name + " like button");
+                               var element = document.getElementById(song_name + author_username + " like button");
                                 if(response.is_already_liked)
                                 { 
                                     element.classList.remove("btn-outline-success");
                                     element.classList.add("btn-success");
                                     element.value="Unlike";
-                                    document.getElementById(song_name+"likes").innerHTML=(parseInt(document.getElementById(song_name+"likes").textContent)+1).toString();
+                                    document.getElementById(song_name+author_username+"likes").innerHTML=(parseInt(document.getElementById(song_name+author_username+"likes").textContent)+1).toString();
                                 }
                                 else
                                 {
                                     element.classList.remove("btn-success");
                                     element.classList.add("btn-outline-success");
                                     element.value="Like";
-                                    document.getElementById(song_name+"likes").innerHTML=(parseInt(document.getElementById(song_name+"likes").textContent)-1).toString(); 
+                                    document.getElementById(song_name+author_username+"likes").innerHTML=(parseInt(document.getElementById(song_name+author_username+"likes").textContent)-1).toString(); 
                                 }
                                   //alert(response.message);
                                   //alert('Company likes count is now ' + response.likes_count);
@@ -112,21 +111,26 @@
                     {% for song,likes in songs_and_likes.items %}
                     <a class="list-group-item index-list-item">
                         <form>
-                            <button formaction="{% url 'song_details:details' song.title %}" class="songButton" >{{ song.title }}</button>
+                            <button formaction="{% url 'song_details:details' likes.author_username song.title %}" class="songButton" >{{ song.title }}</button>
                         </form>
                         <div class="row">
-                        <div class="col-md-4">
+                        <div class="col-md-3">
+                            <div class="avatar">
+                                <img src="{{likes.image}}" onClick=play_music(this.id) name="play" id="{{song.title}}" width="100" height="100" style="position:absolute; top:0; left:0"/>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
                             <input type="button" class="btn btn-outline-success btn-block" onClick=play_music(this.id) name="play" id="{{song.title}}" value="Listen"><br>
                         </div>
-                        <div class="col-md-4">
-                            {% if likes.is_already_liked %}
-                                <input type="button" class="btn btn-success btn-block" onClick=like_song("{{song.title}}") name="like" id="{{song.title}} like button" value="Unlike"><br>
+                        <div class="col-md-3">
+                            {% if likes.is_already_liked %}                    
+                                <input type="button" class="btn btn-success btn-block" onClick='like_song("{{song.title}}", "{{likes.author_username}}")' name="like" id="{{song.title}}{{likes.author_username}} like button" value="Unlike"><br>
                             {% elif likes.is_already_liked is False %}
-                                <input type="button" class="btn btn-outline-success btn-block" onClick=like_song("{{song.title}}") name="like" id="{{song.title}} like button" value="Like"><br>
+                                <input type="button" class="btn btn-outline-success btn-block" onClick='like_song("{{song.title}}", "{{likes.author_username}}")' name="like" id="{{song.title}}{{likes.author_username}} like button" value="Like"><br>
                             {% endif %}
                         </div>
-                        <div class="col-md-4">
-                            <span style="margin-top:13px;" id="{{song.title}}likes">{{likes.likes}}</span>
+                        <div class="col-md-3">
+                            <span style="margin-top:13px;" id="{{song.title}}{{likes.author_username}}likes">{{likes.likes}}</span>
                             <span>&nbsp;likes</span>
                         </div>
                         <!--<div class="col-md-7">

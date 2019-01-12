@@ -18,6 +18,8 @@ class FileModel(models.Model):
     userProfile = models.ForeignKey(User, on_delete=models.CASCADE)
     project = models.ForeignKey(Project, on_delete=models.CASCADE, blank=True, null=True)
     project_publish_resource = models.ForeignKey(Project, on_delete=models.CASCADE, related_name = 'project_publish_resource', null=True)
+    genre=models.CharField(max_length=50, null=True)
+    project_publish_image_url=models.CharField(max_length=500, null=True, default = "https://res.cloudinary.com/easymedicine/image/upload/v1547204544/DefaultSongImage.png")
     likes=models.ManyToManyField(User, related_name="likes")
     description= models.CharField(max_length=500, null=True)
 

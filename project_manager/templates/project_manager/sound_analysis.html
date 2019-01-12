@@ -1,0 +1,34 @@
+{% extends 'base.html' %}
+
+{% block title %}Home{% endblock %}
+
+{% block content %}
+
+<script type="text/javascript" src="http://d3js.org/d3.v3.min.js"></script>
+<script type="text/javascript" src="http://mpld3.github.io/js/mpld3.v0.2.js"></script>
+
+<div class="container wrapper">
+    <h1>Sound Analysis</h1>
+    <br>
+    <h3>{{song1_title}}</h3>
+    <div id="fig01"></div>
+    <br>
+    <h3>{{song2_title}}</h3>
+    <div id="fig02"></div>
+
+    <h5>Volume difference: {{volume_percent}}</h5>
+</div>
+<script type="text/javascript">
+    var json01 = {{json_fig1|safe}};
+    var json02 = {{json_fig2|safe}};
+    //json02.width = 1024
+    //json02.height = 768
+    //console.log(json02);
+    mpld3.draw_figure("fig01", json01);
+    mpld3.draw_figure("fig02", json02);
+</script>   
+</div>
+
+
+
+{% endblock %}

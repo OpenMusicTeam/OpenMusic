@@ -16,18 +16,34 @@
     <h6>{{ project.desc }} </h6>
     <hr> 
     <br>
+
     <div class="row">
-     
       <div class="col-md-6"> 
           <div class="jumbotron">
-          <h5>Currently added resources:</h5>
-          <ul class="list-group list-group-flush">
-            {% for resource in project_resources %}
-              <li class="list-group-item lsItem"><h5>{{ resource.title }}</h5> <small>{{resource.data}}</small> </li>
-            {% endfor %}
-          </ul>
+          <h4>Currently added resources:</h4>
           <br>
-
+          <form action="{% url 'project_manager:soundAnalysis' request.user project.name %}" method="POST">
+            <div class="list-group list-group-flush">
+              {% for resource in project_resources %}
+                <div class="row">
+                <div class="col-md-9">
+                  <h5>{{ resource.title }}</h5> <small>{{resource.data}}</small>
+                </div>
+                <div class="col-md-3">
+                <label class="containerCheckbox">
+                  <input type="checkbox" name="checkedSongs" class="list-group-item lsItem" value="{{resource.title}}/{{resource.data}}">
+                  <span class="checkmark"></span>
+                </label>
+                <!--<input type="checkbox" name="checkedSongs" class="list-group-item lsItem" value="{{resource.title}}/{{resource.data}}">-->
+                </div>
+                </div>
+              {% endfor %}
+            </div>
+            <br>
+              {% csrf_token %}
+              <button class="btn btn-success" type="submit">Analyze these songs</button>
+          </form> 
+          <br>
           <form action="{% url 'project_manager:projectDetails' request.user project.name %}" method="POST">
             {% csrf_token %}
             <button class="btn btn-success" type="submit" name="addResource">Add a resource</button>

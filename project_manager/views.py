@@ -20,6 +20,43 @@ from django.utils.safestring import mark_safe
 import wave
 import re
 #import pathlib
+from scipy.io import wavfile as wav
+from .audio_analysis import Make_Audio_Analysis
+
+class SoundAnalysisView(LoginRequiredMixin, DetailView):
+    template_name = 'project_manager/sound_analysis.html'
+
+
+    def post(self, request, **kwargs):
+        username = kwargs['user_name']
+        currently_logged_username=request.user.username
+        if username!=currently_logged_username:
+            url='/project_manager/projects/'+currently_logged_username+'/'
+            return redirect(url)
+
+        checked_songs = request.POST.getlist('checkedSongs')
+        song1_title=checked_songs[0].split("/")[0]
+        song2_title=checked_songs[1].split("/")[0]
+        song1_data=checked_songs[0].split("/")[1]
+        song2_data=checked_songs[1].split("/")[1]
+        print("Checked songs:")
+        print(checked_songs)
+        #project_name = self.kwargs['project_name']
+        #json_fig = self.make_graph(song_name, username, project_name)
+        project_name = self.kwargs['project_name']
+        json_figs_list = Make_Audio_Analysis(song1_data, song2_data, username, project_name)
+        #Make_Audio_Analysis(song1_data, song2_data, username, project_name)
+        print("Analysis ended.")
+        json_fig1 = json_figs_list[0]
+        json_fig2 = json_figs_list[1]
+        volume_percent = json_figs_list[2]
+        return render(request, 'project_manager/sound_analysis.html', {
+            'song1_title': song1_title,
+            'song2_title': song2_title,
+            'json_fig1': json_fig1,
+            'json_fig2': json_fig2,
+            'volume_percent': volume_percent,
+        })
 
 
 class EditResourcesView(LoginRequiredMixin, TemplateView):
@@ -151,32 +188,29 @@ class ProjectPublishView(LoginRequiredMixin, DetailView):
         project = Project.objects.filter(name__exact=self.kwargs['project_name'])[0]
         project_id = project.id
         project_resources = FileModel.objects.filter(project_id=project_id)
-        form=ProjectPublishForm()
         return render(request, 'project_manager/project_publish.html', {
             'project': project,
             'project_resources': project_resources,
-            'form': form,
         })
 
     def post(self, request, *args, **kwargs):
-        print("IN POST IN POST IN POST !!!!!!!!!!!")
-        project_publish_form = ProjectPublishForm(request.POST)
-        print(str(project_publish_form.is_valid()))
         currently_logged_username=request.user.username
         publish_value=request.POST.get('rate')
+        selected_genre=request.POST.get('projectGenre')
+        project_image_url=request.POST.get('project_image_url')
+        if(len(project_image_url) == 0):
+            project_image_url = "https://res.cloudinary.com/easymedicine/image/upload/DefaultSongImage.png"
+        print('??????????'+project_image_url)
         project = Project.objects.filter(name__exact=self.kwargs['project_name'])[0]
-        project_publish_audio = FileModel.objects.filter(title=publish_value)[0]
-        project_publish_audio.project_publish_resource=project
-        print("IS FORM VALID? " + str(project_publish_form.is_valid()))
-        if(project_publish_form.is_valid()):
-            project_publish_description=project_publish_form.cleaned_data['description']
-            print("***************************")
-            print("-----"+project_publish_description+"-----")
-            project_publish_audio.description=project_publish_description
-            project_publish_audio.save()
-            print("--------------"+publish_value)
+        project_publish_resource = FileModel.objects.filter(title=publish_value)[0]
+        project_publish_resource.project_publish_resource=project
+        project_publish_resource.genre=selected_genre
+        project_publish_resource.project_publish_image_url=project_image_url
+        project_publish_resource.save()
+        print("--------------"+publish_value)
         url='/project_manager/projects/'+currently_logged_username+'/'+project.name+'/'
-        return redirect(url)    
+        return redirect(url)
+
 
 class ProjectsListView(LoginRequiredMixin, ListView):
     template_name = 'project_manager/project_list.html'

@@ -27,7 +27,7 @@ function like_song (song_name) {
     $.ajax({
         type: "POST",
         url: "{% url 'song_details:like' %}",
-        data: {'song_name': song_name,'csrfmiddlewaretoken': '{{ csrf_token }}'},
+        data: {'song_name': song_name, 'song_author': "{{author_username}}" ,'csrfmiddlewaretoken': '{{ csrf_token }}'},
         dataType: "json",
         success: function(response) {
             var element = document.getElementById(song_name + " like button");
@@ -56,22 +56,50 @@ function like_song (song_name) {
     }); 
 }
 
-function comment_song (song_name, comment_text){
+function formatDate(date) {
+  var monthNames = [
+    "Jan", "Feb", "Mar",
+    "Apr", "May", "Jun", "Jul",
+    "Aug", "Sep", "Oct",
+    "Nov", "Dec"
+  ];
+
+  var day = date.getDate();
+  var monthIndex = date.getMonth();
+  var year = date.getFullYear();
+  var hours = date.getHours();
+  var minutes = date.getMinutes();
+  var addon = 'a.m.';
+  if(hours > 12){
+      hours -= 12;
+      addon = 'p.m.';
+  }
+
+  return String(monthNames[monthIndex] + '. ' + day + ', ' + year + ', ' + hours + ':' + minutes + ' ' + addon);
+}
+
+function comment_song (song_title, comment_text, comment_author){
     $.ajax({
         type: "POST",
         url: "{% url 'song_details:comment' %}",
         data: {
-            'song_name': song_name, 
+            'song_name': song_title, 
             'comment_text': comment_text,
             'csrfmiddlewaretoken': '{{ csrf_token }}'
             },
         dataType: "json",
         success: function(response) {
+            alert(song_title);
             //alert(response.is_already_liked)
             var element = document.getElementById("commentsList");
-            var currentdate = new Date(); 
-            element.innerHTML = element.innerHTML+'<li class="clearfix"><img src='+request.user.userProfile.avatar+' class="avatar" alt=""><div class="post-comments"><p class="meta">'+currentdate.getDate()+' <a href="#">'+request.user+'</a> says : </p><p>'+comment_text+'</p></div></li>';
-
+            var currentDate = new Date();
+            var formattedDate = formatDate(currentDate);
+            alert(formattedDate);
+            alert(comment_author);
+            //+ '<img src="../../../accounts/static/accounts/images/\'|add:comment.author.avatar.url %}" class="avatar" alt="Image">' 
+            //element.innerHTML = element.innerHTML+comment_text;
+            //element.innerHTML = element.innerHTML+'<li class="clearfix"><img src='+request.user.userProfile.avatar+' class="avatar" alt=""><div class="post-comments"><p class="meta">'+currentdate.getDate()+' <a href="#">'+request.user+'</a> says : </p><p>'+comment_text+'</p></div></li>';
+            element.innerHTML = element.innerHTML+'<li class="clearfix">' + '<div class="post-comments"><p class="meta">' + formattedDate + ' ' + '<a href="/accounts/profile/'+comment_author+'">'+comment_author+'</a> says : </p>' + comment_text+'</p></div></li>';
 
             //alert(response.message);
             //alert('Company likes count is now ' + response.likes_count);
@@ -144,9 +172,9 @@ function comment_song (song_name, comment_text){
     <div class="row">
         <div class="col-md-2">
             {% if song_likes.is_already_liked %}
-                <input type="button" class="btn btn-success btn-block" onClick=like_song("{{song.title}}") name="like" id="{{song.title}} like button" value="Unlike"><br>
+                <input type="button" class="btn btn-success btn-block" onClick='like_song("{{song.title}}")' name="like" id="{{song.title}} like button" value="Unlike"><br>
             {% elif song_likes.is_already_liked is False %}
-                <input type="button" class="btn btn-outline-success btn-block" onClick=like_song("{{song.title}}") name="like" id="{{song.title}} like button" value="Like"><br>
+                <input type="button" class="btn btn-outline-success btn-block" onClick='like_song("{{song.title}}")' name="like" id="{{song.title}} like button" value="Like"><br>
             {% endif %}
         </div>
         <div class="col-md-4">
@@ -158,11 +186,12 @@ function comment_song (song_name, comment_text){
         <div class="col-md-7">
             <textarea class="form-control" name="comment" form="publish_projects" id="{{song.title}}" placeholder="Write a comment..."></textarea>
             <br>
-            <input type="button" class="btn btn-outline-success" onClick=comment_song("{{song.title}}",document.getElementById("{{song.title}}").value) name="comment" id="{{song.title}} comment button" value="Comment"><br>
+            <input type="button" class="btn btn-outline-success" onClick='comment_song("{{song.title}}",document.getElementById("{{song.title}}").value, "{{song.userProfile.username}}")' name="comment" id="{{song.title}} comment button" value="Comment"><br>
         </div>
     </div>    
 
     <br>
+        <div id="commentsListDiv"></div>
         <div class="row">
             <div class="col-md-12">
                 <div class="blog-comment">

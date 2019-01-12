@@ -90,4 +90,21 @@
 
 
 
+.avatar {
+    position: relative;
+    /*top: -50px;*/
+    margin-bottom: 10px;
+}
+
+.avatar img {
+    width: 70px;
+    height: 70px;
+    max-width: 70px;
+    max-height: 70px;
+    -webkit-border-radius: 50%;
+    -moz-border-radius: 50%;
+    border-radius: 50%;
+    border: 5px solid rgba(255,255,255,0.5);
+}
+
 

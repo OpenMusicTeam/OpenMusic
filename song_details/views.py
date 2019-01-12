@@ -13,6 +13,7 @@ from django.views.generic.base import View
 from django.http import HttpResponse
 from accounts.models import UserProfile
 from django.db.models import Count
+from django.contrib.auth.models import User
 
 class TrendingsView(TemplateView):
     template_name = 'song_details/trendings.html'
@@ -69,15 +70,18 @@ class SongDetails(TemplateView):
 
     def get(self, request, **kwargs):
         song_name = kwargs['song_name']
-        song = FileModel.objects.filter(title=song_name)[0]
+        user=request.user
+        authorUsername=kwargs['user_name']
+        print("AUTHOR USERNAME = " + authorUsername)
+        author=User.objects.filter(username=authorUsername)[0]
+        print("AUTHOR ID = " + str(author.id))
+        song = FileModel.objects.filter(title=song_name, userProfile_id=author.id)[0]
         print("SONG = " + song.title)
         
         audio_files={}
         song_likes={}
 
-        user=request.user
         song_name=song.title
-        song=FileModel.objects.filter(title=song_name)[0]
         song_likes=song.likes
         song_comments=CommentModel.objects.filter(comments=song)
         is_already_liked=None
@@ -92,7 +96,7 @@ class SongDetails(TemplateView):
 
 
         current_file_path = str(song.data.name.replace("/","\\"))
-        print('-----------'+song.title+"---------"+str(song.total_likes()))
+        print('!!!-----------!!!'+song.title+"!!!---------!!!"+str(song.total_likes()))
         song_likes={"likes":song.total_likes(),"is_already_liked":is_already_liked_bool}
         print("is_already_liked_bool: "+ str(is_already_liked_bool))
         print(current_file_path)
@@ -107,6 +111,7 @@ class SongDetails(TemplateView):
         print("SONG is_already_liked:" + str(song_likes["is_already_liked"]))
 
         return render(request, 'song_details/song_details.html', {
+            'author_username': authorUsername,
             'song': song,
             'audio_files':audio_files_as_json,
             'song_likes': song_likes,
@@ -117,8 +122,14 @@ class LikeView(View):
     def post(self, request, *args, **kwargs):
         user=request.user
         song_name=request.POST.get('song_name')
-        liked_song=FileModel.objects.filter(title=song_name)[0]
+        print("SONG_NAME = " + song_name)
+        song_author_username=request.POST.get('song_author')
+        print("SONG_AUTHOR_USERNAME = " + song_author_username)
+        author = User.objects.filter(username=song_author_username)[0]
+        author_id = author.id
+        liked_song=FileModel.objects.filter(title=song_name, userProfile_id=author_id)[0]
         liked_song_likes=liked_song.likes
+        print("LIKED_SONG_LIKES = " + str(liked_song_likes))
         is_already_liked=None
         print("(BEFORE) IS ALREADY LIKED: " + str(is_already_liked))
         is_already_liked=liked_song_likes.filter(username=user.username)

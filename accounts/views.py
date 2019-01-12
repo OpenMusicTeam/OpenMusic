@@ -42,11 +42,17 @@ class ProfileView(TemplateView):
 class Index(TemplateView):
     template_name = 'index.html'
     def get(self,request, **kwargs):
+        user=request.user
         published_projects = FileModel.objects.filter(project_publish_resource_id__isnull=False)
+
+        for resource in published_projects:
+            if resource.title == "Jazz":
+                print(resource.title + " 1010010101010")
+                print(resource.total_likes())
+                print(resource.description)
+
         ready_songs = FileModel.objects.filter(project_id__isnull=True)
         print(ready_songs)
-
-
         """user=request.user
         song_name=request.POST.get('song_name')
         liked_song=FileModel.objects.filter(title=song_name)[0]
@@ -59,14 +65,10 @@ class Index(TemplateView):
             is_already_liked_bool = True
         else:
             is_already_liked_bool = False"""
-
-
-
         songs_to_iterate = published_projects | ready_songs
         audio_files={}
         songs_and_likes={}
         for current_project_resource in songs_to_iterate :
-            user=request.user
             song_name=current_project_resource.title
             liked_song=FileModel.objects.filter(title=song_name)[0]
             liked_song_likes=liked_song.likes
@@ -79,10 +81,13 @@ class Index(TemplateView):
             else:
                 is_already_liked_bool = False
 
-
+            author_id = current_project_resource.userProfile_id
+            author_username = User.objects.filter(id=author_id)[0]
             current_file_path = str(current_project_resource.data.name.replace("/","\\"))
-            print('-----------'+current_project_resource.title+"---------"+str(current_project_resource.total_likes()))
-            songs_and_likes[current_project_resource]={"likes":current_project_resource.total_likes(),"is_already_liked":is_already_liked_bool}
+            current_project_image_url=current_project_resource.project_publish_image_url
+            current_project_genre=current_project_resource.genre
+            print('-----------'+current_project_resource.title+"---------"+str(current_project_resource.total_likes())+"--------------------"+str(author_username))
+            songs_and_likes[current_project_resource]={"likes":current_project_resource.total_likes(),"is_already_liked":is_already_liked_bool, 'author_username': author_username, "image":current_project_image_url, "genre":current_project_genre}
             print(current_file_path)
             current_file_path_length = len(current_file_path)
             current_file_path_wav = str(current_file_path[:current_file_path_length-3] + 'wav')
@@ -102,8 +107,14 @@ class LikeView(View):
     def post(self, request, *args, **kwargs):
         user=request.user
         song_name=request.POST.get('song_name')
-        liked_song=FileModel.objects.filter(title=song_name)[0]
+        print("SONG_NAME = " + song_name)
+        song_author_username=request.POST.get('song_author')
+        print("SONG_AUTHOR_USERNAME = " + song_author_username)
+        author = User.objects.filter(username=song_author_username)[0]
+        author_id = author.id
+        liked_song=FileModel.objects.filter(title=song_name, userProfile_id=author_id)[0]
         liked_song_likes=liked_song.likes
+        print("LIKED_SONG_LIKES = " + str(liked_song_likes))
         is_already_liked=None
         print("(BEFORE) IS ALREADY LIKED: " + str(is_already_liked))
         is_already_liked=liked_song_likes.filter(username=user.username)
