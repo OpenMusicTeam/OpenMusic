@@ -22,9 +22,13 @@ class UploadFile(LoginRequiredMixin, TemplateView):
         print(form.is_valid())
         try:
             if form.is_valid():
+                print("form is validddddd")
                 #username=request.user.username
                 afile=request.FILES['data']
                 file_name=request.POST['title']
+                
+                #isAnEditedSong=request.POST['isAnEditedSong']
+                isAnEditedSong=request.POST.get('isAnEditedSong', '') == True
                 current_user=request.user
                 username=request.user.username
                 print(file_name)                
@@ -39,11 +43,13 @@ class UploadFile(LoginRequiredMixin, TemplateView):
                 project_name=request.POST['project_name']
                 print('Project_name = ' + project_name)
                 if project_name is not None and project_name is not '':
-                    file_model.data.field.upload_to = 'user_projects/'+username+'/'+project_name+'/'
+                    #file_model.data.field.upload_to = 'user_projects/'+username+'/'+project_name+'/'
+                    file_model.data.field.upload_to = 'project_manager/static/user_projects/'+username+'/'+project_name+'/'
                     project=Project.objects.filter(name=project_name)[0]
                     file_model.project=project
                 else:
-                    file_model.data.field.upload_to = 'user_projects/'+username+'/'
+                    #file_model.data.field.upload_to = 'user_projects/'+username+'/'
+                    file_model.data.field.upload_to = 'project_manager/static/user_projects/'+username+'/'
                 file_model.userProfile=current_user
                 form.save()
                 file_path = str(file_model.data)

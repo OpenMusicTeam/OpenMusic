@@ -6,7 +6,7 @@ class UploadFileForm(ModelForm):
    
     class Meta:
         model = FileModel
-        fields = ['title', 'data',]
+        fields = ['title', 'data', 'isAnEditedSong', 'version']
         widgets = {
             'title': forms.TextInput(attrs=
             {
@@ -19,4 +19,13 @@ class UploadFileForm(ModelForm):
                 'id': 'customFile',
                 'class': 'custom-file-input',
             }),
+            'isAnEditedSong': forms.CheckboxInput(attrs={
+                'class': 'is-an-edited-song',
+                'id': 'isAnEditedSong'
+            }),
+            'version': forms.NumberInput(attrs={
+                'class': 'form-control',
+                'type': 'number',
+                'id': 'version-id'
+            })
         }

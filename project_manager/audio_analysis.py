@@ -3,14 +3,15 @@ matplotlib.use('Agg')
 import matplotlib.pyplot as plt, mpld3
 from matplotlib import cm
 import numpy as np
-from scipy.fftpack import rfft
+from scipy.fftpack import rfft, fft
 from scipy.io import wavfile as wav
 from scipy import signal
 from scipy.signal import butter, lfilter
 import json
+from sklearn.metrics import mean_squared_error
 
 
-first_deriv_peak_prominence = 10
+first_deriv_peak_prominence = 4
 
 #1st iteration constants
 cell_duration_1st_iter = 2
@@ -18,8 +19,8 @@ elements_to_desegment_1st_iter = 1
 shaper_1st_iter = 0.2
 percent_match_const_coef_1st_iter = 0.1
 round_const_1st_iter = 1
-fft_divide_const_1st_iter = 5
-prominence_const_1st_iter = 57
+fft_divide_const_1st_iter = 4
+prominence_const_1st_iter = 65 #57
 edge_margin_1st_iter = 1.2
 
 #2nd iteration constants
@@ -59,6 +60,13 @@ duration2_total = 0
 order = 6
 cutoff = 5000  # desired cutoff frequency of the filter, Hz
 
+def Correct_phase(fft_out):
+    fft_out_corrected_phase = []
+    for ele in fft_out:
+        fft_out_corrected_phase.append(np.sqrt(ele.real*ele.real + ele.imag*ele.imag))
+        
+    return fft_out_corrected_phase
+
 def butter_lowpass(cutoff, fs, order=5):
     nyq = 0.5 * fs
     normal_cutoff = cutoff / nyq
@@ -73,9 +81,22 @@ def butter_lowpass_filter(data, cutoff, fs, order=5):
 def ArrangeSongsSegments(matched_indexes, matched_x, matched_y, duration, cell_duration, elements_to_desegment, edges_of_song1, edges_of_song2):
     np_matched_indexes = np.array(matched_indexes)
     if(len(np_matched_indexes) > 0):
-        peaks_matched_indexes, _ = signal.find_peaks(np_matched_indexes[:,3],prominence=first_deriv_peak_prominence)
-        print(peaks_matched_indexes)
+        np_matched_indexes_first_deriv = np_matched_indexes[:,3]
+        
+        #print("(Before in function) np_matched_indexes_first_deriv: ")
+        #print(np_matched_indexes_first_deriv)
+        #Correct errors
+        #for i in range(1, len(np_matched_indexes_first_deriv)-1):
+        #    if(abs(np_matched_indexes_first_deriv[i] + np_matched_indexes_first_deriv[i+1]) <= 1 and (np_matched_indexes_first_deriv[i] != 0 and np_matched_indexes_first_deriv[i+1] != 0)):
+        #        np_matched_indexes_first_deriv[i] = np_matched_indexes_first_deriv[i-1]
+        #        np_matched_indexes_first_deriv[i+1] = np_matched_indexes_first_deriv[i-1]
+       # print("(After in function) np_matched_indexes_first_deriv: ")
+        #print(np_matched_indexes_first_deriv)
+        
+        peaks_matched_indexes, _ = signal.find_peaks(abs(np_matched_indexes_first_deriv),prominence=first_deriv_peak_prominence)
+        #print(peaks_matched_indexes)
     
+        #print("len(peaks_matched_indexes) = " + str(len(peaks_matched_indexes)))
         if(len(peaks_matched_indexes) > 0):
             k = 1
             for i in range(0, len(peaks_matched_indexes)+1):        
@@ -89,31 +110,31 @@ def ArrangeSongsSegments(matched_indexes, matched_x, matched_y, duration, cell_d
                     start = peaks_matched_indexes[i-1]
                     end = peaks_matched_indexes[i]
 
-                print("start = " + str(start))
-                print("end = " + str(end))
+                #print("start = " + str(start))
+                #print("end = " + str(end))
 
                 if(end - start > 0):
                     avg_offset = sum(np.array(np_matched_indexes[:,2])[start:end]) / (end - start)
-                    print("avg_offset = " + str(avg_offset))
+                    #print("avg_offset = " + str(avg_offset))
 
                     minI = int(min(np.array(np_matched_indexes[:,0])[start:end]))
-                    print("Before minI = " + str(minI))
+                    #print("Before minI = " + str(minI))
                     maxI = int(max(np.array(np_matched_indexes[:,0])[start:end]))
-                    print("Before maxI = " + str(maxI))
+                    #print("Before maxI = " + str(maxI))
                     minJ = int(min(np.array(np_matched_indexes[:,1])[start:end]))
-                    print("Before minJ = " + str(minJ))
+                    #print("Before minJ = " + str(minJ))
                     maxJ = int(max(np.array(np_matched_indexes[:,1])[start:end]))
-                    print("Before maxJ = " + str(maxJ))
+                    #print("Before maxJ = " + str(maxJ))
 
                     startJ = minI - int(round(avg_offset, 0))
                     endJ = maxI - int(round(avg_offset, 0)) # 6 + (-11) = -5
 
                     if(minJ < startJ):
                         minJ = startJ
-                        print("After minJ = " + str(minJ))
+                        #print("After minJ = " + str(minJ))
                     if(maxJ > endJ): # 20 > -5
                         maxJ = endJ
-                        print("After maxJ = " + str(maxJ))
+                        #print("After maxJ = " + str(maxJ))
 
 
                     #avg_offset = 0
@@ -174,8 +195,8 @@ def ArrangeSongsSegments(matched_indexes, matched_x, matched_y, duration, cell_d
                     #print("minI = " + str(minI))
                     #print("maxI = " + str(maxI))
 
-                    print("minI = " + str(minI))
-                    print("maxI = " + str(maxI))
+                    #print("minI = " + str(minI))
+                    #print("maxI = " + str(maxI))
                     for j in range(minI, maxI):
                         matched_x[j] = k
 
@@ -185,10 +206,10 @@ def ArrangeSongsSegments(matched_indexes, matched_x, matched_y, duration, cell_d
                     for j in range(minJ, maxJ):
                         matched_y[j] = k   
 
-                    print("k = " + str(k))
-                    print("matched_x = ")
+                    #print("k = " + str(k))
+                    #print("matched_x = ")
                     print(matched_x)
-                    print("matched_y = ")
+                    #print("matched_y = ")
                     print(matched_y)
                     #matched_x[minI:maxI] = k
                     #matched_y[minJ:maxJ] = k
@@ -198,26 +219,26 @@ def ArrangeSongsSegments(matched_indexes, matched_x, matched_y, duration, cell_d
 
                     k+=1    
         else:
-            print("In else")
+            #print("In else")
             k = 1
             np_differences = np.array([0] * len(np_matched_indexes))
             for a in range(1, len(np_matched_indexes)):
                 np_differences[a] = abs(np_matched_indexes[a][0] - np_matched_indexes[a-1][0])
             np_differences_peaks, _1 = signal.find_peaks(np_differences,prominence=2)
-            print("np_differences_peaks = ")
+            #print("np_differences_peaks = ")
             print(np_differences_peaks)
 
 
             for i in range(0, len(np_differences_peaks)+1):  
                 if(len(np_differences_peaks) == 0): #When there is a different segment in the start
                     start = 0
-                    end = int(round(duration / cell_duration - elements_to_desegment, 0)) + 1
+                    end = int(round(duration / cell_duration - elements_to_desegment + 1, 0)) + 1
                 elif(i == 0): # When there is a "hole"
                     start = 0
                     end = np_differences_peaks[i]
                 elif(i == len(np_differences_peaks)):
                     start = np_differences_peaks[i-1]
-                    end = int(round(duration / cell_duration - elements_to_desegment, 0)) + 1
+                    end = int(round(duration / cell_duration - elements_to_desegment + 1, 0)) + 1
                 else:
                     start = np_differences_peaks[i-1]
                     end = np_differences_peaks[i]
@@ -227,15 +248,29 @@ def ArrangeSongsSegments(matched_indexes, matched_x, matched_y, duration, cell_d
                 minJ = int(min(np.array(np_matched_indexes[:,1])[start:end]))
                 maxJ = int(max(np.array(np_matched_indexes[:,1])[start:end]))
 
-                for j in range(minI, maxI):
+                #print("minI = " + str(minI))
+                #print("maxI = " + str(maxI))
+                #print("minJ = " + str(minJ))
+                #print("maxJ = " + str(maxJ))
+                
+                for j in range(minI, maxI + 1):
                     matched_x[j] = k
 
-                for j in range(minJ, maxJ):
+                for j in range(minJ, maxJ + 1):
                     matched_y[j] = k     
 
-                edges_of_song1.append([k, minI*cell_duration, maxI*cell_duration])
-                edges_of_song2.append([k, minJ*cell_duration, maxJ*cell_duration])
+                if((maxI + 1)*cell_duration <= duration):
+                    edges_of_song1.append([k, minI*cell_duration, (maxI + 1)*cell_duration])
+                else:
+                    edges_of_song1.append([k, minI*cell_duration, duration])
 
+                
+                if((maxJ + 1)*cell_duration <= duration):  
+                    edges_of_song2.append([k, minJ*cell_duration, (maxJ + 1)*cell_duration])
+                else:
+                    edges_of_song2.append([k, minJ*cell_duration, duration])
+
+                    
                 k+=1
 
 
@@ -248,7 +283,6 @@ def ArrangeSongsSegments(matched_indexes, matched_x, matched_y, duration, cell_d
 
             #    matched_x[i] = k
             #    matched_y[j] = k
-        
 
 def Filter_edges(matched_x, matched_y, cell_duration, start):
     edges = []
@@ -284,12 +318,19 @@ def List_data(fft_out):
     return fft_out_list
 
 
-def Normalize_data(data_trimmed):
+def Normalize_data(data):
+    max_element = max(data, key=abs)
     data_norm = []
-    max_element = max(data_trimmed)
-    data_norm = []
-    for ele in data_trimmed:
-        data_norm.append(ele/max_element)
+    
+    #print("IN NORMALIZE DATA -!_!_!_!_!__!!__!_!_!_!_!__!_!")
+    #print("max_element = " + str(max_element))
+    for ele in data:
+        #print("ele = " + str(ele))
+        #print("ele/max_ele = " + str(ele/max_element))
+        if(max_element != 0):
+            data_norm.append(ele/max_element)
+        else:
+            data_norm.append(0)
     
     return data_norm
 
@@ -324,8 +365,27 @@ def CalculateMatchPercent_old(elem1, elem2, shaper):
     return percent
 
     
-def CalculateMatchPercent(elem1, elem2, shaper):
-    return np.corrcoef(elem1, elem2)[0][1]*100
+def CalculateMatchPercent(elem1, elem2, shaper):  
+    #print("------> elem1:  <-------------------- ")
+    #print(elem1)
+    #print("------> elem2:  <-------------------- ")
+    #print(elem2)
+    corrcoef = abs(np.corrcoef(elem1, elem2)[0][1])*100
+    #print("Corrcoef = " + str(corrcoef))
+    return corrcoef
+    
+    #elem1 = np.array(elem1)
+    #elem2 = np.array(elem2)
+    #error = np.mean( elem1 != elem2 )
+    #return (1 - error) * 100
+    
+    #print("np.percentile = " + str(np.percentile(elem1, elem2)))
+    #return np.percentile(elem1, elem2)
+    
+    #sqared_error = (np.square(np.array(elem1) - np.array(elem2))).mean()*5000
+    #sqared_error = mean_squared_error(elem1, elem2)
+    #print("sqared_error = " + str(sqared_error))
+    #return sqared_error
 
 
 def Trim(data, rate, start, end):
@@ -342,6 +402,8 @@ def Trim(data, rate, start, end):
 def Analyze_sound(start, end, cell_duration, elements_to_desegment, shaper, percent_match_const_coef, round_const, fft_divide_const, prominence_const, edges_of_song1, edges_of_song2):   
     duration1 = end - start
     duration2 = end - start
+    #print("Duration 1 = " + str(duration1))
+    #print("Duration 2 = " + str(duration2))
     
     i = start
     starts1 = []
@@ -355,6 +417,10 @@ def Analyze_sound(start, end, cell_duration, elements_to_desegment, shaper, perc
         starts2.append(i)
         i = round(i + cell_duration,1)
         
+    #print("starts1:")
+    print(starts1)
+    #print("starts2:")
+    print(starts2)
     
     fft_data1_list = []
     fft_data2_list = []
@@ -365,20 +431,74 @@ def Analyze_sound(start, end, cell_duration, elements_to_desegment, shaper, perc
             end1 = round(start1 + cell_duration, 1)  
 
         #trimming
+        #print("start = " + str(start1))
+        #print("end = " + str(end1))
         data1_trimmed = Trim(data1, rate1, start1, end1)
+        #if(start1==0):
+        #    print("!!!!!data1_trimmed!!!!!")
+        #    print(data1_trimmed)
+        #    print("!!!!!!!!!!!!!!!!!!!!!!!!")
+        
+        #trimming
+        #times1 = np.array([ [start1, end1] ])
+        #times1 = np.ceil(times1*rate1)
+        #print(times1)
+        #newWavFileAsList1 = []
+
+        #for elem1 in times1:
+        #  startRead1 = int(elem1[0])
+        #  endRead1 = int(elem1[1])
+        #  if startRead1 >= data1.shape[0]:
+        #    startRead1 = data1.shape[0]-1
+        #  if endRead1 >= data1.shape[0]:
+        #    endRead1 = data1.shape[0]-1
+        #  newWavFileAsList1.extend(data1[startRead1:endRead1])
+
+        #data1_trimmed = np.array(newWavFileAsList1)
 
         #normalizing data
         data1_norm = Normalize_data(data1_trimmed)
+        #if(start1 == 0):
+        #    print("!!!!!data1_norm!!!!!")
+        #    for ele in data1_norm:
+        #        print(ele)
+        #    print("!!!!!!!!!!!!!!!!!!!!!!!!")
 
+        #print("cell_duration = " + str(cell_duration))
+        #print("rate1 = " + str(rate1))
+        #print("fft_divide_const = " + str(fft_divide_const))
         #fourier transform
-        fft_out1 = rfft(data1_norm, int(cell_duration*rate1/fft_divide_const))
-
+        fft_out1 = fft(data1_norm, int(cell_duration*rate1/fft_divide_const))
+        
+        
+        #if(start1 == 0):
+        #    print("!!!!!fft_out1!!!!!")
+        #    for ele in fft_out1:
+        #        print(ele)
+        #    print("!!!!!!!!!!!!!!!!!!!!!!!!")
+        
+        #phase correction
+        fft_out1_phase_corrected = Correct_phase(fft_out1)
+        
+        #if(start1 == 0):
+        #    print("!!!!!fft_out1_phase_corrected!!!!!")
+        #    for ele in fft_out1_phase_corrected:
+        #        print(ele)
+        #    print("!!!!!!!!!!!!!!!!!!!!!!!!")
+        
         #listing
         #fft_out1_list = List_data(fft_out1)
 
         #normalizing fft
         #fft_out1_list_norm = Normalize_fft(fft_out1_list)
-        fft_out1_list_norm = Normalize_fft(fft_out1)
+        #if(max(fft_out1_phase_corrected, key=abs) == 0):
+            #print("start = " + str(start))
+        fft_out1_list_norm = Normalize_data(fft_out1_phase_corrected)
+        #if(start1 == 0):
+        #    print("!!!!!fft_out1_list_norm!!!!!")
+        #    for ele in fft_out1_list_norm:
+        #        print(ele)
+        #    print("!!!!!!!!!!!!!!!!!!!!!!!!")
 
         #rounding fft
         Round_fft(fft_out1_list_norm, round_const)
@@ -401,18 +521,47 @@ def Analyze_sound(start, end, cell_duration, elements_to_desegment, shaper, perc
         #trimming
         data2_trimmed = Trim(data2, rate2, start2, end2)
 
+        #trimming
+        #times2 = np.array([ [start2, end2] ])
+        #times2 = np.ceil(times2*rate2)
+
+        #newWavFileAsList2 = []
+
+        #for elem2 in times2:
+        #  startRead2 = int(elem2[0])
+        #  endRead2 = int(elem2[1])
+        #  if startRead2 >= data2.shape[0]:
+        #    startRead2 = data2.shape[0]-1
+        #  if endRead2 >= data2.shape[0]:
+        #    endRead2 = data2.shape[0]-1
+        #  newWavFileAsList2.extend(data2[startRead2:endRead2])
+
+        #data2_trimmed = np.array(newWavFileAsList2)
+
         #normalizing data
         data2_norm = Normalize_data(data2_trimmed)
 
         #fourier transform
-        fft_out2 = rfft(data2_norm, int(cell_duration*rate2/fft_divide_const))
+        fft_out2 = fft(data2_norm, int(cell_duration*rate2/fft_divide_const))
+        #if(start2 == 2):
+        #    print("!!!!!fft_out2!!!!!")
+        #    for ele in fft_out2:
+        #        print(ele)
+        #    print("!!!!!!!!!!!!!!!!!!!!!!!!")
+        
+        #phase correction
+        fft_out2_phase_corrected = Correct_phase(fft_out2)
+        
+        #print("!!!!!fft_out2_phase_corrected!!!!!")
+        #print(fft_out2_phase_corrected)
+        #print("!!!!!!!!!!!!!!!!!!!!!!!!")
 
         #listing
         #fft_out2_list = List_data(fft_out2)
 
         #normalizing fft
         #fft_out2_list_norm = Normalize_fft(fft_out2_list)
-        fft_out2_list_norm = Normalize_fft(fft_out2)
+        fft_out2_list_norm = Normalize_data(fft_out2_phase_corrected)
 
         #rounding fft
         Round_fft(fft_out2_list_norm, round_const)
@@ -428,44 +577,86 @@ def Analyze_sound(start, end, cell_duration, elements_to_desegment, shaper, perc
     i = 0
     j = 0
     print(len(fft_data1_list))
-    print(len(fft_data1_list[0]))
+    #print(len(fft_data1_list[0]))
     print(len(fft_data2_list))
 
-    while i < (len(fft_data1_list) - elements_to_desegment):
-        elem1 = Desegment(fft_data1_list ,i , elements_to_desegment)
-        while j < (len(fft_data2_list) - elements_to_desegment):
-            elem2 = Desegment(fft_data2_list ,j , elements_to_desegment)
+    #print("!!!!!fft_data1_list!!!!!")
+    #print(fft_data1_list[0])
+    #print("!!!!!!!!!!!!!!!!!!!!!!!!")
+    #print("!!!!!fft_data2_list!!!!!")
+    #print(fft_data2_list)
+    #print("!!!!!!!!!!!!!!!!!!!!!!!!")
+    while i <= (len(fft_data1_list) - elements_to_desegment):
+        #elem1 = fft_data1_list[i]
 
+        elem1 = Desegment(fft_data1_list ,i , elements_to_desegment)
+        #print("!!!!!ELEM 1 IN WHILE!!!!!")
+        #print(elem1)
+        #print("!!!!!!!!!!!!!!!!!!!!!!!!")
+        while j <= (len(fft_data2_list) - elements_to_desegment):
+            #elem2 = fft_data2_list[j]
+            elem2 = Desegment(fft_data2_list ,j , elements_to_desegment)
+            #print("!!!!!ELEM 2 IN WHILE!!!!!")
+            #print(elem1)
+            #print("!!!!!!!!!!!!!!!!!!!!!!!!")
+              #print("i = " + str(i))
+              #print("j = " + str(j))
+            #print("Len elem1 = " + str(len(elem1)))
+            #print("Len elem2 = " + str(len(elem2)))
+            #print("elem1= " + str(elem1))
+            #for a in range(0, len(elem1)):
+               # if float(elem1[a]) - float(elem2[a]) != 0:
+                    #print(a)
+                    #print(elem1[a])
+                    #print(elem2[a])
+                    #print("-----------")
             if(len(elem1) != len(elem2)):
                 ans = False
             else:
                 ans = np.logical_and(
                     np.logical_and(elem1 is not None, elem2 is not None),
                     elem1 == elem2)
+            #print(ans)
             results.append(ans)
             j+=1
 
             if(len(elem1) == len(elem2)):
                 percent = CalculateMatchPercent(elem1, elem2, shaper)
+                #print("Match percentage = " + str(percent) + "%")
                 percents.append([percent,i,j-1])
+                #if(percent >= percent_match_const):
+                #    matched_indexes.append([i,j-1])
             else:
                 percents.append([0, i, j-1])
                 
-            if ans:
+            if round(percent, -1) == 100.0:
                 break
-        if(j == len(fft_data2_list) - elements_to_desegment):
+            #else:
+                #j = 0
+                #break
+        if(j == len(fft_data2_list) - elements_to_desegment + 1):
             j = 0
+        #print("Outside")
         i+=1
-
-
+        
+    #print(percents)
     np_percents = np.array(percents)
+    
     np_percents_values = np_percents[:,0]
     
+    #percents_values = []
+    #for percent in percents:
+    #    percents_values.append(percent[0])
         
+    #percents_values = np.array(percents_values)
+    #print(np_percents_values)
     avg_percent = np.mean(np_percents_values)
     match_percent = avg_percent * percent_match_const_coef
+    #print("Avg percent = " + str(avg_percent))
 
     
+    #np_percents_values = np.array(percents_values)
+    #indices = peakutils.indexes(np_percents_values, thres=16/max(np_percents_values), min_dist=0.1)
     peaks, _ = signal.find_peaks(np_percents_values,prominence=prominence_const, height = match_percent, distance = 6)
     percents_values_filtered = []
     for peak in peaks:
@@ -473,33 +664,171 @@ def Analyze_sound(start, end, cell_duration, elements_to_desegment, shaper, perc
 
     
     matched_indexes=[]
-
+    #for percent in percents:
+    #   if(percent[0] >= match_percent):
+    #        matched_indexes.append([percent[1],percent[2]])
+    
     for i in range(len(percents)):
-        if(percents[i][0] == 100.00 or i in peaks):
-            matched_indexes.append([percents[i][1], percents[i][2], (percents[i][1] - percents[i][2]),0,percents[i][0]])
+        if(round(percents[i][0],-1) == 100.00 or i in peaks):
+            matched_indexes.append([percents[i][1], percents[i][2], (percents[i][1] - percents[i][2]),0,percents[i][0]])          
     
     #-----------------------------------------------------
     for i in range(1, len(matched_indexes)):
-        matched_indexes[i] = [matched_indexes[i][0], matched_indexes[i][1], matched_indexes[i][2], abs(matched_indexes[i][2] - matched_indexes[i-1][2]), matched_indexes[i][4]]
+        matched_indexes[i] = [matched_indexes[i][0], matched_indexes[i][1], matched_indexes[i][2], matched_indexes[i][2] - matched_indexes[i-1][2], matched_indexes[i][4]]
     if(len(matched_indexes) > 0):
         matched_indexes[0] = [matched_indexes[0][0], matched_indexes[0][1], matched_indexes[0][2], 0, matched_indexes[0][4]]
     
+        #print("(Before correction) Matched_indexes = ")
+        print(matched_indexes)
+        
+        #np_matched_indexes_first_deriv = np.array(matched_indexes)[:,3]
+    
+        #print("(Before) np_matched_indexes_first_deriv: ")
+        #print(np_matched_indexes_first_deriv)
+        print(np.array(matched_indexes)[:,3])
+        
+        #Correct errors old
+        #for i in range(1, len(np_matched_indexes_first_deriv)-1):
+        #    if(abs(np_matched_indexes_first_deriv[i] + np_matched_indexes_first_deriv[i+1]) <= 1 and (np_matched_indexes_first_deriv[i] != 0 and np_matched_indexes_first_deriv[i+1] != 0)):
+        #        np_matched_indexes_first_deriv[i] = np_matched_indexes_first_deriv[i-1]
+        #        np_matched_indexes_first_deriv[i+1] = np_matched_indexes_first_deriv[i-1]
+                
+                
+        #Correct errors
+        for i in range(1, len(matched_indexes)-1):
+            if(abs(matched_indexes[i][3] + matched_indexes[i+1][3]) <= 1 and (matched_indexes[i][3] != 0 and matched_indexes[i+1][3] != 0)):
+                matched_indexes[i][3] = matched_indexes[i-1][3]
+                matched_indexes[i+1][3] = matched_indexes[i-1][3]
+                matched_indexes[i][0] = matched_indexes[i-1][0] + 1
+                matched_indexes[i][1] = matched_indexes[i-1][1] + 1
+                matched_indexes[i][2] = matched_indexes[i-1][2]
+                
+        
+        #print("(After) np_matched_indexes_first_deriv: ")
+        #print(np_matched_indexes_first_deriv)
+        print(np.array(matched_indexes)[:,3])
+        
         np_matched_indexes_first_deriv = np.array(matched_indexes)[:,3]
+        
+        #peaks_matched_indexes, _1 = signal.find_peaks(abs(np.array(matched_indexes[3])),prominence=first_deriv_peak_prominence)
+        peaks_matched_indexes, _1 = signal.find_peaks(abs(np_matched_indexes_first_deriv),prominence=first_deriv_peak_prominence)
     
-        peaks_matched_indexes, _1 = signal.find_peaks(np_matched_indexes_first_deriv,prominence=first_deriv_peak_prominence)
+        print(np_matched_indexes_first_deriv)
+        #print(matched_indexes[3])
+        print(peaks_matched_indexes)
+        #print("First derivative graph:")
+        fig, ax = plt.subplots()
+        ax.plot(np_matched_indexes_first_deriv)
+        #ax.plot(matched_indexes[3])
+        ax.plot(peaks_matched_indexes, np_matched_indexes_first_deriv[peaks_matched_indexes], "x")
+        #ax.plot(peaks_matched_indexes, matched_indexes[3][peaks_matched_indexes], "x")
+        plt.show()
+        
+    #print("Percents graph:")
+    #print("len(percents) = " + str(len(np_percents_values)))
+    np_match_percent = np.array([match_percent] * len(np_percents_values))
+    fig, ax = plt.subplots()
+    ax.plot(np_percents_values)
+    ax.plot(peaks, np_percents_values[peaks], "x")
+    ax.plot(np_match_percent)
+    plt.show()
     
 
-
+    #print("Matched_indexes = ")
+    print(matched_indexes)
     #-----------------------------------------------------
-    matched_x = [0] * (len(fft_data1_list) - elements_to_desegment)
-    matched_y = [0] * (len(fft_data2_list) - elements_to_desegment)
+    matched_x = [0] * (len(fft_data1_list) - elements_to_desegment + 1)
+    matched_y = [0] * (len(fft_data2_list) - elements_to_desegment + 1)
     ArrangeSongsSegments(matched_indexes, matched_x, matched_y, duration1, cell_duration, elements_to_desegment, edges_of_song1, edges_of_song2)        
     
+    #k = 1
+    #matched_x = [0] * (len(fft_data1_list) - elements_to_desegment)
+    #matched_y = [0] * (len(fft_data2_list) - elements_to_desegment)
+    #Filling matched_x and matched_y with values
+    #for i in range(0, len(matched_indexes) - 1):
+    #    print("i = " + str(i))
+    #    print("k = " + str(k))
+        
+    #    elem = matched_indexes[i]
+    #    next_elem = matched_indexes[i+1]
+        
+    #    matched_x[elem[0]] = k
+    #    matched_y[elem[1]] = k
+        
+    #    if(abs(elem[0] - next_elem[0]) > 2 or abs(elem[1] - next_elem[1]) > 5):
+    #        k+=1
+    
+    print(matched_x)
+    print(matched_y)
+    #Filling array with 0 and k
+    #matched_x = []
+    #for i in range(0, (len(fft_data1_list) - elements_to_desegment)):
+    #    for j in range(0, len(matched_indexes)):
+    #        if(i == matched_indexes[j][0]):
+    #            matched_x.append(1)
+    #            break
+    #    if(len(matched_x)<=i):
+    #       matched_x.append(0)
+
+    #Removing errors in the array
+    #for i in range(0, len(matched_x) - 3):
+    #    if(matched_x[i+1] != matched_x[i]):
+    #        if(matched_x[i+1] != matched_x[i+2] or matched_x[i+1] != matched_x[i+3]):
+    #             matched_x[i+1] = matched_x[i]
+                
+    #Repairing ends of every segment in the array
+    #print("len(matched_x) = " + str(len(matched_x)))
+    #for i in range(0, len(matched_x) - 1 - elements_to_desegment):
+    #    if(matched_x[i] != matched_x[i+1]):
+    #        if(matched_x[i] != 0):
+    #            for j in range(i + 1, i + elements_to_desegment):
+                    #print("i = " + str(i))
+                    #print("j = " + str(j))
+    #                matched_x[j] = matched_x[i]
+                
+    #            i += elements_to_desegment
 
 
+    #Filling array with 0 and k            
+    #matched_y = []
+    #for i in range(0, (len(fft_data1_list) - elements_to_desegment)):
+    #    for j in range(0, len(matched_indexes)):
+    #        if(i == matched_indexes[j][1]):
+    #            matched_y.append(1)
+    #           break
+    #    if(len(matched_y)<=i):
+    #        matched_y.append(0)
+            
+    #Removing errors in the array
+    #for i in range(0, len(matched_y) - 3):
+    #    if(matched_y[i+1] != matched_y[i]):
+    #        if(matched_y[i+1] != matched_y[i+2] or matched_y[i+1] != matched_y[i+3]):
+    #            matched_y[i+1] = matched_y[i]
+                
+    #Repairing ends of every segment in the array
+    #for i in range(0, len(matched_y) - 1 - elements_to_desegment):
+    #    if(matched_y[i] != matched_y[i+1]):
+    #        if(matched_y[i] != 0):
+    #            for j in range(i + 1, i + elements_to_desegment):
+    #                matched_y[j] = matched_y[i]
+                
+    #            i += elements_to_desegment
+
+    xf5 = np.linspace(start, duration1+start, (len(fft_data1_list) - elements_to_desegment + 1))
+    fig, ax = plt.subplots()
+    ax.plot(xf5, matched_x, 'g')
+    #plt.axvspan(10.5, 20.5, facecolor='#2ca02c', alpha=0.5)
+    #ax.plot(xf5, matched_y, 'r')
+    plt.show()
+
+
+    fig, ax = plt.subplots()
+    ax.plot(xf5, matched_y, 'r')
+    plt.show()
 
     edges = Filter_edges(matched_x, matched_y, cell_duration, start)
-    
+    print(edges)
+
     return edges
 
 
@@ -517,9 +846,14 @@ def Make_Audio_Analysis(song1_data, song2_data, user_name, project_name):
     global duration1_total
     global duration2_total
 
-    project_folder = 'user_projects/'+user_name+'/'+project_name+'/'
+    project_folder = 'project_manager/static/user_projects/'+user_name+'/'+project_name+'/'
     file_path1 = project_folder + song1_data
     file_path2 = project_folder + song2_data
+    #file_path1 = song1_data
+    #file_path2 = song2_data
+
+    print("!!!!!!---------- FILE_PATH 1------------ !!!!!!!!!")
+    print(file_path1)
 
     rate1_orig, data1_orig = wav.read(file_path1)
     if(len(data1_orig.shape) > 1):
@@ -530,6 +864,8 @@ def Make_Audio_Analysis(song1_data, song2_data, user_name, project_name):
     rate1 = rate1_orig/4
     #rate1 = rate1_orig
 
+    print(len(data1_orig))
+    print(len(data1))
 
     rate2_orig, data2_orig = wav.read(file_path2)
     if(len(data2_orig.shape) > 1):
@@ -544,7 +880,7 @@ def Make_Audio_Analysis(song1_data, song2_data, user_name, project_name):
     duration2_total = len(data2)/rate2
 
     start_1st_iter = 0
-    end_1st_iter = duration1_total
+    end_1st_iter = min(duration1_total, duration2_total)
 
     edges_of_song1 = []
     edges_of_song2 = []

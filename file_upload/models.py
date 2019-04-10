@@ -22,6 +22,8 @@ class FileModel(models.Model):
     project_publish_image_url=models.CharField(max_length=500, null=True, default = "https://res.cloudinary.com/easymedicine/image/upload/v1547204544/DefaultSongImage.png")
     likes=models.ManyToManyField(User, related_name="likes")
     description= models.CharField(max_length=500, null=True)
+    isAnEditedSong = models.BooleanField(null=True, default=False, blank=True)
+    version = models.FloatField(null=True, blank=True)
 
     def __str__(self):
     	return str(self.title) 

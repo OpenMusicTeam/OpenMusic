@@ -26,7 +26,14 @@
     <br>
     <div class="list-group">
         {% for project in project_set %}
+        <div class="row">
+        <div class="col-md-11">
             <a href="{% url 'project_manager:projectDetails' username project.name %}" class="list-group-item list-group-item-action">{{ project.name }}</a>
+        </div>
+        <div class="col-md-1">
+            <a type="button" style="float:left" class="close" href="{% url 'project_manager:remove_project' project.name %}"><span aria-hidden="true">&times;</span></a>
+        </div>
+        </div>
         {% endfor %}
     </div>
     <br>
@@ -34,4 +41,7 @@
     <a class="btn btn-outline-success" href="{% url 'project_manager:add_project' %}">Add a project</a>
 </div>
 
+
 {% endblock %}
+          
+

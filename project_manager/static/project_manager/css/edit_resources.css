@@ -36,3 +36,25 @@
     background: #23870d; /* Green background */
     cursor: pointer; /* Cursor on hover */
 }
+
+
+
+body {
+    background: #f9f9f9;
+}
+.wrapper {
+    background: white;
+    border-radius: 0px 0px 10px 10px;
+    padding: 17px;
+}
+
+.nav-link {
+    font-size:22px;
+}
+
+.navbarImage {
+    max-width: 100px;
+    height: 65px;
+    margin-right:5px;
+}
+

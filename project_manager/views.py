@@ -22,6 +22,7 @@ import re
 #import pathlib
 from scipy.io import wavfile as wav
 from .audio_analysis import Make_Audio_Analysis
+from django.http import HttpResponseRedirect
 
 class SoundAnalysisView(LoginRequiredMixin, DetailView):
     template_name = 'project_manager/sound_analysis.html'
@@ -35,15 +36,27 @@ class SoundAnalysisView(LoginRequiredMixin, DetailView):
             return redirect(url)
 
         checked_songs = request.POST.getlist('checkedSongs')
+        print("Chck songs:!.!.!.!>!>!>!>!>!>!>>!>!>!>!>!>")
+        print(checked_songs)
+        
         song1_title=checked_songs[0].split("/")[0]
         song2_title=checked_songs[1].split("/")[0]
         song1_data=checked_songs[0].split("/")[1]
         song2_data=checked_songs[1].split("/")[1]
+
+        if(song1_data[-3:] == "mp3"):
+            song1_data = song1_data[:-3] + "wav"
+        if(song2_data[-3:] == "mp3"):
+            song2_data = song2_data[:-3] + "wav"
         print("Checked songs:")
         print(checked_songs)
         #project_name = self.kwargs['project_name']
         #json_fig = self.make_graph(song_name, username, project_name)
         project_name = self.kwargs['project_name']
+
+        print("song1_data: " + str(song1_data))
+        print("song2_data: " + str(song2_data))
+
         json_figs_list = Make_Audio_Analysis(song1_data, song2_data, username, project_name)
         #Make_Audio_Analysis(song1_data, song2_data, username, project_name)
         print("Analysis ended.")
@@ -77,29 +90,36 @@ class EditResourcesView(LoginRequiredMixin, TemplateView):
         project_id = project.id
         user_id = request.user.id
         project_resources = FileModel.objects.filter(project_id=project_id)
-        audio_files={}
+        #audio_files={}
+        audio_paths={}
 
         for current_project_resource in project_resources :
             
             current_file_path = str(current_project_resource.data.name.replace("/","\\"))
+            current_file_path_2 = str(current_project_resource.data.name)
             print(current_file_path)
             current_file_path_length = len(current_file_path)
             print(current_file_path_length)
             current_file_path_wav = str(current_file_path[:current_file_path_length-3] + 'wav')
+            current_file_path_wav_2 = str(current_file_path_2[16:len(current_file_path_2)-3] + 'wav')
+
+            audio_paths[current_project_resource.title]=current_file_path_wav_2
+
+
             print(current_file_path_wav)
-            current_file = wave.open(os.path.join(settings.BASE_DIR, current_file_path_wav),'rb')
+            #current_file = wave.open(os.path.join(settings.BASE_DIR, current_file_path_wav),'rb')
             '''encoded_audio = base64.b64encode(audio_file)
             print(encoded_audio)
             project_resources_filedata_base64=encoded_audio'''
 
-            project_resource_base64=(base64.standard_b64encode(open(os.path.join(settings.BASE_DIR, current_file_path_wav),'rb').read())).decode('utf-8')
+            #project_resource_base64=(base64.standard_b64encode(open(os.path.join(settings.BASE_DIR, current_file_path_wav),'rb').read())).decode('utf-8')
             #print("ReSOURCE TITLE = " + current_project_resource.title)
             #project_resource_string= [t.encode('utf-8') for t in title]
-            audio_files[current_project_resource.title]=project_resource_base64
+            #audio_files[current_project_resource.title]=project_resource_base64
         print("======================= Files ===========================================")
         #print(audio_files.keys())
         
-        audio_files_as_json=json.loads(json.dumps(audio_files, indent=2))
+        #audio_files_as_json=json.loads(json.dumps(audio_files, indent=2))
         #print(audio_files_as_json)
         dictionary = {
             'int': 2,
@@ -113,7 +133,8 @@ class EditResourcesView(LoginRequiredMixin, TemplateView):
         #project = Project.objects.all()[0]
         return render(request, 'project_manager/edit_resources.html', {
             'project_resources': project_resources,
-            'audio_files':audio_files_as_json,
+            #'audio_files':audio_files_as_json,
+            'audio_paths':audio_paths,
         })
 
     def post(self, request, *args, **kwargs):
@@ -133,13 +154,34 @@ class ProjectDetailView(LoginRequiredMixin, DetailView):
 
         project = Project.objects.filter(name__exact=self.kwargs['project_name'])[0]
         project_id = project.id
-        project_resources = FileModel.objects.filter(project_id=project_id)
+        project_resources = FileModel.objects.filter(project_id=project_id).filter(isAnEditedSong=False)
+
+        already_edited_songs = FileModel.objects.filter(project_id=project_id).filter(isAnEditedSong=True)
 
         project_resources_formated_data=[]
+        already_edited_songs_formated_data=[]
+
+        audio_files={}
+
+        for resource in already_edited_songs:
+            current_file_path = str(resource.data.name.replace("/","\\"))
+            current_file_path_wav = str(current_file_path[:len(current_file_path)-3] + 'wav')
+            project_resource_base64=(base64.standard_b64encode(open(os.path.join(settings.BASE_DIR, current_file_path_wav),'rb').read())).decode('utf-8')
+            audio_files[resource.title]=project_resource_base64
+        print("LENNNNNNNNN ======= "  + str(len(audio_files)))
+        audio_files_as_json=json.loads(json.dumps(audio_files, indent=2))
+
+        for resource in already_edited_songs:
+            new_data = re.search('[^/]+$', str(resource.data)).group(0)
+            resource.data = new_data
+            already_edited_songs_formated_data.append(resource)
+
         for resource in project_resources:
-           new_data = re.search('[^/]+$', str(resource.data)).group(0)
-           resource.data = new_data
-           project_resources_formated_data.append(resource)
+            new_data = re.search('[^/]+$', str(resource.data)).group(0)
+            resource.data = new_data
+            project_resources_formated_data.append(resource)
+
+
         print("======================= Files ===========================================")
         previous_url = request.path
         print(project_resources)
@@ -152,7 +194,9 @@ class ProjectDetailView(LoginRequiredMixin, DetailView):
             'project': project,
             'project_resources': project_resources_formated_data,
             'form': form,
-            'previous_url': previous_url
+            'previous_url': previous_url,
+            'already_edited_songs': already_edited_songs_formated_data,
+            'already_edited_songs_json': audio_files_as_json,
         })
     def post(self, request, *args, **kwargs):
         project = Project.objects.filter(name__exact=self.kwargs['project_name'])[0]
@@ -308,3 +352,15 @@ class AddProjectView(LoginRequiredMixin, TemplateView):
             print("ProjectsListView in ELSE")
             project_form=ProjectForm()
             return render(request, 'project_manager/project_list.html',{'project_form':project_form})
+
+
+class RemoveProjectView(LoginRequiredMixin, TemplateView):
+    template_name = 'project_manager/project_list.html'
+
+    def get(self, request, **kwargs):
+        project_name = kwargs['project_name']
+        Project.objects.filter(name=project_name).delete()
+
+        #return redirect('projects')
+        return HttpResponseRedirect(request.META.get('HTTP_REFERER', '/'))
+        #return render(request, 'projects/'+username+'/')

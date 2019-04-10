@@ -11,4 +11,6 @@ urlpatterns = [
     path('projects/<str:user_name>/<str:project_name>/edit_resources/', views.EditResourcesView.as_view(), name='editResources'),
     path('projects/<str:user_name>/<str:project_name>/publish/', views.ProjectPublishView.as_view(), name='projectPublish'),
     path('projects/<str:user_name>/<str:project_name>/sound_analysis/', views.SoundAnalysisView.as_view(), name='soundAnalysis'),
+    path('remove_project/<str:project_name>/', views.RemoveProjectView.as_view(), name='remove_project'),
+
 ]

@@ -2,3 +2,7 @@
     margin-top: 15px; 
     margin-bottom: 15px;
 }
+#version-id {
+    width:65px;
+    margin-left:10px;
+}

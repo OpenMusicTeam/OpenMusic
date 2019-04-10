@@ -1,0 +1,22 @@
+{
+  "name": "openmusic_current",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/OpenMusicTeam/OpenMusic.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/OpenMusicTeam/OpenMusic/issues"
+  },
+  "homepage": "https://github.com/OpenMusicTeam/OpenMusic#readme",
+  "dependencies": {
+    "waveform-playlist": "^3.0.4"
+  }
+}
